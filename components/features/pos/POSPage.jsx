@@ -641,7 +641,7 @@ export default function POSPage() {
               <span>Grand Total</span>
               <span className="cart-grand-amount" id="cartGrandTotal">{formatPeso(cartGrandTotal)}</span>
             </div>
-            <button type="button" className="btn-primary cart-checkout-btn" id="completeSaleBtn" onClick={() => setShowCheckout(true)} disabled={!cart.length}>
+            <button type="button" className="btn-primary cart-checkout-btn" id="completeSaleBtn" onClick={() => { closePanel(); setShowCheckout(true); }} disabled={!cart.length}>
               Checkout
               {queueCount > 0 && <span className="cart-queue-badge">{queueCount} queued</span>}
             </button>
@@ -786,20 +786,25 @@ export default function POSPage() {
             <label className="pdp-label">Customer Name</label>
             <div className="custom-select-wrap" id="bdpCustomerSelectWrap">
               {!chosenCustomer && (
-                <input type="text" className="pdp-input" id="bdpCustomerSearch" placeholder="Search customer..." value={customerQuery} onChange={(e) => { setCustomerQuery(e.target.value); setCustomerDropdownOpen(true); }} onFocus={() => setCustomerDropdownOpen(true)} autoComplete="off" />
+                <input type="text" id="bdpCustomerSearch" className="pdp-input" placeholder="Search customer..." value={customerQuery} onChange={(e) => { setCustomerQuery(e.target.value); setCustomerDropdownOpen(true); }} onFocus={() => setCustomerDropdownOpen(true)} autoComplete="off" />
               )}
               {customerDropdownOpen && !chosenCustomer && (
                 <div className="custom-select-dropdown open" id="bdpCustomerDropdown">
                   {filteredCustomers.map((customer) => (
                     <div key={customer.id} className="csd-item" onClick={() => selectCustomer(customer)}>
-                      <div className="csd-name">{customer.name}</div>
-                      {customer.location && <div className="csd-location">{customer.location}</div>}
+                      <div className="csd-main-row"><span className="csd-name">{customer.name}</span>{customer.location ? <span className="csd-inline-location"><span className="material-icons-outlined">location_on</span>{customer.location}</span> : null}</div>
+                      {customer.pointPerson ? <div className="csd-point-person"><span className="material-icons-outlined">badge</span>{customer.pointPerson}</div> : null}
                     </div>
                   ))}
+                  {customerQuery && !filteredCustomers.length && <div className="csd-item csd-empty">No customers found</div>}
                 </div>
               )}
             </div>
-            {chosenCustomer && (<div className="pdp-selected-customer" id="bdpSelectedCustomer"><span className="pdp-selected-name" id="bdpSelectedName">{chosenCustomer.name}</span><span className="pdp-selected-location" id="bdpSelectedLocation">{chosenCustomer.location || ''}</span><button type="button" className="pdp-clear-customer" id="bdpClearCustomer" onClick={() => { setChosenCustomer(null); setCustomerQuery(''); }}><span className="material-icons-outlined">close</span></button></div>)}
+            <div className="pdp-selected-customer" id="bdpSelectedCustomer" style={{ display: chosenCustomer ? '' : 'none' }}>
+              <span className="pdp-selected-name" id="bdpSelectedName">{chosenCustomer?.name || ''}</span>
+              <span className="pdp-selected-location" id="bdpSelectedLocation">{chosenCustomer?.location || ''}</span>
+              <button type="button" className="pdp-clear-customer" id="bdpClearCustomer" onClick={() => { setChosenCustomer(null); setCustomerQuery(''); }}><span className="material-icons-outlined">close</span></button>
+            </div>
           </div>
 
           <div className="pdp-field">
@@ -904,8 +909,12 @@ export default function POSPage() {
 
       <div className={`pdp-overlay${panelType && panelType !== 'edit' ? ' show' : ''}`} onClick={closePanel} />
 
-      <div className={`pay-modal-overlay${showCheckout ? ' show' : ''}`} id="checkoutConfirmOverlay">
-        <div className="pay-modal checkout-confirm-modal">
+      <div
+        className={`pay-modal-overlay checkout-confirm-overlay${showCheckout ? ' show' : ''}`}
+        id="checkoutConfirmOverlay"
+        onClick={() => { if (!checkoutLoading) setShowCheckout(false); }}
+      >
+        <div className="pay-modal checkout-confirm-modal" onClick={(e) => e.stopPropagation()}>
           <div className="pay-modal-header">
             <div className="checkout-confirm-title"><span className="material-icons-outlined">receipt_long</span>Confirm Order</div>
             <button type="button" className="pdp-close-btn" id="checkoutConfirmClose" onClick={() => setShowCheckout(false)}><span className="material-icons-outlined">close</span></button>

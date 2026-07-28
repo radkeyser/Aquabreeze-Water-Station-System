@@ -1,28 +1,177 @@
-.reports-tabs-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom: 14px; }
-.reports-tabs { display:flex; flex-wrap:wrap; gap:8px; }
-.reports-tab { border:none; border-radius:999px; background: var(--muted); color: var(--muted-fg); padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; transition: all var(--transition); }
-.reports-tab:hover { background: rgb(238,241,245); }
-.reports-tab.active { background: var(--primary); color: var(--primary-fg); box-shadow: var(--shadow); }
-.btn-export-report { display:inline-flex; align-items:center; gap:8px; border:none; border-radius:999px; background: var(--primary); color: var(--primary-fg); padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; transition: all var(--transition); }
-.btn-export-report:hover { opacity:0.95; }
+.reports-tabs-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+}
+.reports-tabs {
+  display: flex; gap: 6px; flex-wrap: wrap; flex: 1;
+}
+.reports-tab {
+  padding: 8px 18px; border: 2px solid var(--border);
+  border-radius: var(--radius); background: var(--card);
+  color: var(--muted-fg); font-family: var(--font);
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all var(--transition);
+}
+.reports-tab:hover  { border-color: var(--primary); color: var(--primary); }
+.reports-tab.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.reports-tab:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
 
-.reports-global-filter { position:relative; z-index:60; overflow:visible; }
-.report-filter-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; background: rgb(255,255,255); border:1px solid rgb(238,241,245); border-radius: var(--radius-lg); padding:10px 14px; box-shadow: var(--shadow); }
-.report-filter-label { font-size:12px; font-weight:700; color: var(--muted-fg); white-space:nowrap; }
-.filter-person-select, .rf-date { min-width:130px; border:1px solid rgb(238,241,245); border-radius:999px; padding:8px 12px; background: rgb(255,255,255); color: var(--fg); outline:none; font-size:13px; }
-.rf-custom-dates { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
-.report-filter-separator { color: var(--muted-fg); font-size:13px; }
+.reports-panel        { display: none; }
+.reports-panel.active { display: block; }
 
-.pay-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display:flex; align-items:center; justify-content:center; z-index:120; padding:24px; }
-.pay-modal { width: min(100%, 460px); background: rgb(255,255,255); border-radius: 24px; overflow:hidden; box-shadow: var(--shadow-lg); }
-.pay-modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid rgb(238,241,245); }
-.pay-modal-title { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; color: var(--fg); }
-.pdp-close-btn { width:38px; height:38px; border:none; border-radius:999px; background: var(--muted); color: var(--muted-fg); display:flex; align-items:center; justify-content:center; cursor:pointer; }
-.pdp-close-btn:hover { background: rgb(226,232,240); }
-.pay-modal-body { padding:20px; display:flex; flex-direction:column; gap:16px; }
-.pay-modal-info { color: var(--muted-fg); font-size:13px; line-height:1.6; }
-.pdp-field { display:flex; flex-direction:column; gap:8px; }
-.pdp-label { color: var(--muted-fg); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
-.pdp-input { width:100%; min-height:44px; border:1px solid rgb(238,241,245); border-radius:16px; padding:12px 14px; background: rgb(255,255,255); color: var(--fg); outline:none; }
-.pdp-input[type='date'] { width: 100%; }
-.pdp-help-text { color: var(--muted-fg); font-size:11px; }
+/* ── Global date filter bar ─────────────────────────────────────────── */
+.reports-global-filter {
+  display: flex; align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--muted);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+}
+
+.report-toolbar {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+}
+.report-toolbar .search-input { flex: 1; min-width: 200px; margin-bottom: 0; }
+
+.report-filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rf-custom-dates   { display: flex; align-items: center; gap: 6px; }
+.rf-custom-dates .pdp-input { padding: 8px 10px; font-size: 13px; }
+
+/* =============================================
+   REPORTS — consistent font on all table cells
+   ============================================= */
+.data-table td,
+.data-table tfoot td {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* =============================================
+   REPORTS — footer / totals row
+   ============================================= */
+.rpt-footer-row {
+  background: var(--muted);
+  border-top: 2px solid var(--border);
+}
+.rpt-footer-row td {
+  padding: 16px 14px;
+  font-size: 13px;
+  border-top: 2px solid var(--border);
+}
+
+/* =============================================
+   REPORTS — Cash Drawer tab
+   ============================================= */
+.cd-footer-row { background: var(--muted); }
+.cd-footer-row td { border-top: 2px solid var(--border); }
+
+#rtable-cashdrawer .badge-success { background: hsl(150,40%,92%); color: hsl(150,40%,28%); }
+#rtable-cashdrawer .badge-warning { background: hsl(38,90%,92%);  color: hsl(38,70%,30%);  }
+
+/* =============================================
+   REPORTS — Export button
+   ============================================= */
+.btn-export-report {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; background: var(--primary);
+  color: #fff; border: none; border-radius: var(--radius);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: all var(--transition);
+}
+.btn-export-report:hover { opacity: 0.88; }
+.btn-export-report .material-icons-outlined { font-size: 17px; }
+
+/* Export date presets */
+.export-date-presets {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;
+}
+.export-preset {
+  padding: 6px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius); background: var(--card);
+  color: var(--muted-fg); font-family: var(--font);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all var(--transition);
+}
+.export-preset:hover  { border-color: var(--primary); color: var(--primary); }
+.export-preset.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* =============================================
+   REPORTS — Borrowed tab
+   ============================================= */
+
+/* Return button inside the borrowed table */
+.btn-return-borrow {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  background: hsl(210,60%,96%);
+  color: hsl(210,60%,35%);
+  border: 1.5px solid hsl(210,50%,80%);
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all var(--transition);
+  white-space: nowrap;
+}
+.btn-return-borrow:hover {
+  background: hsl(210,60%,50%);
+  border-color: hsl(210,60%,45%);
+  color: #fff;
+}
+.btn-return-borrow .material-icons-outlined { font-size: 16px; }
+
+/* Borrow return modal fields spacing */
+.borrow-return-fields { margin-bottom: 4px; }
+
+/* Fix dropdown clipping */
+.reports-panel {
+  overflow: visible;
+}
+
+.report-toolbar {
+  position: relative;
+  z-index: 50;
+  overflow: visible;
+}
+
+.reports-global-filter {
+  position: relative;
+  z-index: 60;
+  overflow: visible;
+}
+
+/* Card must NOT clip its overflow so dropdowns escape it */
+.reports-panel .card {
+  overflow: visible;
+}
+
+/* But keep horizontal scroll only on the table wrapper itself */
+.reports-panel .card-body {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* =============================================
+   REPORTS — Borrowed tab
+   ============================================= */
+
+/* Ensure all borrowed table cells match global data-table font */
+#rtable-borrowed td {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+/* Override the inline monospace style on Customer ID cell */
+#rtable-borrowed td:first-child {
+  font-family: var(--font);
+  font-size: 14px;
+}
+
+/* Muted time cell — keep muted color but match font */
+#rtable-borrowed .borrow-time-cell {
+  font-size: 14px;
+}

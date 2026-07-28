@@ -12,7 +12,7 @@ import EmptyState from './EmptyState.jsx';
  * yet, just a consistent shell every page can feed data into once the
  * Supabase queries land.
  */
-export default function DataTable({ columns, rows = [], emptyLabel = 'No records found', footer, id, tableClassName }) {
+export default function DataTable({ columns, rows = [], emptyLabel = 'No records found', footerData, id, tableClassName }) {
   return (
     <table id={id} className={clsx('data-table w-full text-sm border-collapse', tableClassName)}>
       <thead>
@@ -59,7 +59,17 @@ export default function DataTable({ columns, rows = [], emptyLabel = 'No records
           ))
         )}
       </tbody>
-      {footer && <tfoot>{footer}</tfoot>}
+      {footerData && (
+        <tfoot>
+          <tr className="rpt-footer-row">
+            {columns.map((col, idx) => (
+              <td key={col.key} className="text-sm font-semibold" style={{ textAlign: col.align || 'left' }}>
+                {idx === 0 ? (footerData.label ?? '') : (footerData[col.key] ?? '')}
+              </td>
+            ))}
+          </tr>
+        </tfoot>
+      )}
     </table>
   );
 }

@@ -82,7 +82,7 @@
 .payroll-actions { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
 
 /* Table scroll container */
-.payroll-card { overflow: visible; }
+.payroll-card { overflow: hidden; }
 .payroll-table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -178,8 +178,8 @@
   align-items: center;
   gap: 6px;
   padding: 9px 18px;
-  background: var(--advance-bg);
-  color: var(--advance-color);
+  background: hsl(38, 90%, 94%);
+  color: hsl(38, 80%, 35%);
   border: 1px solid hsl(38, 80%, 80%);
   border-radius: var(--radius);
   font-family: inherit;

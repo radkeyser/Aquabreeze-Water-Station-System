@@ -423,6 +423,10 @@
 /* =============================================
    CHECKOUT CONFIRMATION MODAL
    ============================================= */
+.checkout-confirm-overlay {
+  z-index: 500;
+}
+
 .checkout-confirm-modal {
   width: 90vh;
   max-width: 90vw;

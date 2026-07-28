@@ -214,7 +214,6 @@ body {
 .filter-date-label { font-size:12px; color: var(--muted-fg); }
 .filter-date-input { min-width:140px; border:1px solid rgb(238,241,245); border-radius:16px; padding:10px 12px; background: rgb(255,255,255); color: var(--fg); outline:none; }
 .filter-date-sep { width:12px; }
-.pdp-status-pill { display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background: hsl(358, 77%, 92%); color: hsl(358, 80%, 38%); }
 .status-utang { background: hsl(358, 77%, 92%); color: hsl(358, 80%, 38%); }
 .btn-primary {
   padding: 7px 16px; border: none; border-radius: var(--radius);
@@ -289,7 +288,7 @@ body {
 .reports-panel { display:none; }
 .reports-panel.active { display:block; }
 .report-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:18px 16px; }
-.card { background: rgb(255,255,255); border:1px solid rgb(238,241,245); border-radius: var(--radius-lg); overflow:hidden; }
+.card { background: rgb(255,255,255); box-shadow: var(--shadow); border:1px solid rgb(238,241,245); border-radius: var(--radius-lg); overflow:hidden; }
 .card-body { overflow-x:auto; }
 .data-table { width:100%; border-collapse: collapse; min-width: 900px; }
 .data-table th, .data-table td { padding:14px 16px; border-bottom:1px solid rgb(238,241,245); vertical-align: middle; }
@@ -324,6 +323,44 @@ body {
   .filter-person-select, .rf-date { min-width:100%; }
   .btn-export-report { width:100%; justify-content:center; }
 }
+
+/* =============================================
+   SHARED MODAL INPUTS
+   ============================================= */
+  .pdp-input[readonly] { background: var(--muted); color: var(--muted-fg); cursor: default; }
+  
+  .pdp-field { display: flex; flex-direction: column; gap: 6px; }
+  .pdp-label {
+    font-size: 12px; font-weight: 600; color: var(--muted-fg);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  
+  .pdp-close-btn {
+    width: 36px; height: 36px; border: none; background: var(--muted);
+    border-radius: var(--radius); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--muted-fg); flex-shrink: 0; transition: background var(--transition);
+  }
+  .pdp-close-btn:hover { background: var(--border); color: var(--fg); }
+  
+  .pdp-status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; align-self: flex-start; transition: all var(--transition);
+  }
+  .pdp-status-pill.status-utang   { background: var(--destructive-light); color: var(--destructive); }
+  .pdp-status-pill.status-partial { background: hsl(38,90%,94%);          color: hsl(38,80%,35%);    }
+  .pdp-status-pill.status-paid    { background: hsl(150,40%,92%);         color: hsl(150,40%,28%);   }
+  .pdp-status-pill .material-icons-outlined { font-size: 16px; }
+  
+
+.pay-modal { width: min(100%, 460px); background: rgb(255,255,255); border-radius: 24px; overflow:hidden; box-shadow: var(--shadow-lg); }
+.pay-modal-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 20px; border-bottom:1px solid rgb(238,241,245); }
+.pay-modal-title { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; color: var(--fg); }
+.pay-modal-body { padding:20px; display:flex; flex-direction:column; gap:16px; }
+.pay-modal-info { color: var(--muted-fg); font-size:13px; line-height:1.6; }
+.pdp-input { width:100%; min-height:44px; border:1px solid rgb(238,241,245); border-radius:16px; padding:12px 14px; background: rgb(255,255,255); color: var(--fg); outline:none; }
+.pdp-input[type='date'] { width: 100%; }
+.pdp-help-text { color: var(--muted-fg); font-size:11px; }
 
 /* Dashboard styles (ported from AppScript) */
 .dash-wrapper { display: flex; flex-direction: column; height: 100%; gap: 10px; }

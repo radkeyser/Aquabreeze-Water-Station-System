@@ -383,34 +383,21 @@ export default function ReportsPage() {
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, currentPage, pageSize]);
 
-  const footer = useMemo(() => {
+  const footerData = useMemo(() => {
     if (!filteredRows.length) return null;
     switch (activeTab) {
       case 'sales':
-        return (
-          <tr className="border-t border-border bg-muted">
-            <td colSpan={8} className="py-3 text-right text-sm font-semibold text-muted-fg">Total</td>
-            <td className="py-3 text-right text-sm font-semibold">{formatPeso(filteredRows.reduce((sum, row) => sum + row.total, 0))}</td>
-            <td className="py-3 text-right text-sm font-semibold text-success">{formatPeso(filteredRows.reduce((sum, row) => sum + row.amountPaid, 0))}</td>
-            <td colSpan={2} />
-          </tr>
-        );
+        return {
+          label: 'Total',
+          total: formatPeso(filteredRows.reduce((sum, row) => sum + row.total, 0)),
+          amountPaid: formatPeso(filteredRows.reduce((sum, row) => sum + row.amountPaid, 0)),
+        };
       case 'expenses':
-        return (
-          <tr className="border-t border-border bg-muted">
-            <td colSpan={4} className="py-3 text-right text-sm font-semibold text-muted-fg">Total</td>
-            <td className="py-3 text-right text-sm font-semibold text-danger">{formatPeso(filteredRows.reduce((sum, row) => sum + row.amount, 0))}</td>
-          </tr>
-        );
+        return { label: 'Total', amount: formatPeso(filteredRows.reduce((sum, row) => sum + row.amount, 0)) };
       case 'pautang':
       case 'collections':
       case 'advances':
-        return (
-          <tr className="border-t border-border bg-muted">
-            <td colSpan={activeTab === 'pautang' ? 5 : activeTab === 'collections' ? 6 : 4} className="py-3 text-right text-sm font-semibold text-muted-fg">Total</td>
-            <td className="py-3 text-right text-sm font-semibold text-danger">{formatPeso(filteredRows.reduce((sum, row) => sum + row.amount, 0))}</td>
-          </tr>
-        );
+        return { label: 'Total', amount: formatPeso(filteredRows.reduce((sum, row) => sum + row.amount, 0)) };
       default:
         return null;
     }
@@ -621,12 +608,12 @@ export default function ReportsPage() {
 
             <div className="card">
               <div className="card-body" style={{ overflowX: 'auto' }}>
-                <DataTable
+              <DataTable
                   id={`rtable-${tab.key}`}
                   tableClassName="data-table"
                   columns={columns}
                   rows={paginatedRows}
-                  footer={footer}
+                  footerData={footerData}
                   emptyLabel="No records found"
                 />
               </div>
