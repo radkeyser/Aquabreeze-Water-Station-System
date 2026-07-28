@@ -2,7 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import ProductsTab from './ProductsTab.jsx';
 import SuppliersTab from './SuppliersTab.jsx';
 import OthersTab from './OthersTab.jsx';
+<<<<<<< HEAD
 import './settings.css';
+=======
+import '../../../src/settings.css';
+>>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('products');

@@ -16,7 +16,11 @@ import {
   updateCustomer,
 } from '../../../src/api/customers.js';
 import { formatPeso } from '../../../src/utils/format.js';
+<<<<<<< HEAD
 import './customers.css';
+=======
+import '../../../src/customers.css';
+>>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 
 const PAGE_SIZE = 10;
 const SORT_COLS = ['name', 'location', 'pointPerson', 'gallon', 'dispenser', 'utang'];

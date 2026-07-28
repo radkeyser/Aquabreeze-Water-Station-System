@@ -18,7 +18,11 @@ import {
   updatePayroll,
 } from '../../../src/api/payroll.js';
 import { formatPeso } from '../../../src/utils/format.js';
+<<<<<<< HEAD
 import './payroll.css';
+=======
+import '../../../src/payroll.css';
+>>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 
 function Modal({ open, onClose, title, children, maxWidth = 460 }) {
   if (!open) return null;
