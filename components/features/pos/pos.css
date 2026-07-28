@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
-/* =============================================
-   POS LAYOUT
-   ============================================= */
 .pos-wrapper { display: flex; flex-direction: column; gap: 24px; }
 
 /* ── Side-by-side products row ────────────────────────────────────── */
@@ -60,11 +53,7 @@
 
 /* ── Regular product card ─────────────────────────────────────────── */
 .product-card {
-<<<<<<< HEAD
   background: var(--card); border: 1px solid var(--border);
-=======
-  background: var(--whitecard); border: 1px solid var(--border);
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
   border-radius: var(--radius-lg); padding: 20px;
   text-align: center; cursor: pointer; transition: all var(--transition);
 }
@@ -126,11 +115,7 @@
 
 /* ---- Cart Container ---- */
 .cart-container {
-<<<<<<< HEAD
   background: var(--card); border: 1px solid var(--border);
-=======
-  background: var(--whitecard); border: 1px solid var(--border);
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
   border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
 }
 .cart-container-header {
@@ -142,7 +127,6 @@
   font-size: 15px; font-weight: 700; color: var(--fg);
 }
 .cart-container-title .material-icons-outlined { font-size: 20px; color: var(--primary); }
-<<<<<<< HEAD
 
 .btn-assign-pp {
   display: inline-flex; align-items: center; gap: 5px;
@@ -154,8 +138,6 @@
 }
 .btn-assign-pp:hover { background: var(--accent); }
 .btn-assign-pp .material-icons-outlined { font-size: 15px; }
-=======
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 .cart-count-badge {
   background: var(--primary); color: #fff;
   font-size: 11px; font-weight: 700;
@@ -204,11 +186,7 @@
 
 .cart-footer {
   padding: 16px 20px; border-top: 1px solid var(--border);
-<<<<<<< HEAD
   display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--card);
-=======
-  display: flex; align-items: center; justify-content: space-between; gap: 16px; background: var(--whitecard);
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 }
 .cart-grand-total { display: flex; flex-direction: column; gap: 2px; }
 .cart-grand-total span:first-child {
@@ -222,11 +200,7 @@
    ORDER SUMMARY PANEL
    ============================================= */
 .order-summary-panel {
-<<<<<<< HEAD
   background: var(--card); border: 1px solid var(--border);
-=======
-  background: var(--whitecard); border: 1px solid var(--border);
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
   border-radius: var(--radius-lg); box-shadow: var(--shadow);
   overflow: hidden; position: sticky; top: 24px;
 }
@@ -242,11 +216,7 @@
 .order-summary-table thead th {
   padding: 10px 14px; text-align: left;
   font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-<<<<<<< HEAD
   color: var(--muted-fg); border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--card);
-=======
-  color: var(--muted-fg); border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--whitecard);
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 }
 .order-summary-table thead th:not(:first-child) { text-align: center; }
 .order-summary-table tbody td {
@@ -273,11 +243,7 @@
 .product-detail-panel {
   position: fixed; top: 0; right: -420px;
   width: 400px; height: 100vh;
-<<<<<<< HEAD
   background: var(--card); box-shadow: var(--shadow-lg);
-=======
-  background: var(--whitecard); box-shadow: var(--shadow-lg);
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
   z-index: 300; display: flex; flex-direction: column;
   transition: right 0.3s cubic-bezier(0.4,0,0.2,1);
   border-left: 1px solid var(--border);
@@ -314,11 +280,7 @@
 .custom-select-wrap { position: relative; }
 .custom-select-dropdown {
   display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-<<<<<<< HEAD
   background: var(--card); border: 1px solid var(--border);
-=======
-  background: var(--whitecard); border: 1px solid var(--border);
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
   border-radius: var(--radius); box-shadow: var(--shadow-lg);
   z-index: 400; max-height: 240px; overflow-y: auto;
 }
@@ -528,12 +490,6 @@
 
 /* Totals block */
 .checkout-confirm-totals {
-<<<<<<< HEAD
-=======
-  border-top: 2px solid var(--border);
-  padding: 14px 20px;
-  display: flex; flex-direction: column; gap: 6px;
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
   background: var(--muted);
 }
 .cc-total-row {
@@ -551,11 +507,7 @@
 .checkout-confirm-actions {
   display: flex; gap: 10px; padding: 16px 20px;
   border-top: 1px solid var(--border);
-<<<<<<< HEAD
   background: var(--card);
-=======
-  background: var(--whitecard);
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 }
 .checkout-confirm-actions .btn-cancel-delete {
   flex: 0 0 auto;
@@ -638,7 +590,6 @@
   cursor: pointer;
 }
 
-<<<<<<< HEAD
 /* ── Borrowed gallon checkbox ─────────────────────────────────────── */
 .pdp-checkbox-label {
   display: flex;
@@ -661,8 +612,6 @@
   flex-shrink: 0;
 }
 
-=======
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 /* Override price indicator */
 .pdp-override-indicator {
   display: inline-flex;
