@@ -2,11 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { addSupplier, deleteSupplier, getSuppliers, updateSupplier } from '../../../src/api/settings';
 import { formatPeso } from '../../../src/utils/format';
 import SettingsModal from './SettingsModal';
-<<<<<<< HEAD
 import './settings.css';
-=======
-import '../../../src/settings.css';
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 
 function cell(v) {
   if (v > 0) return v;

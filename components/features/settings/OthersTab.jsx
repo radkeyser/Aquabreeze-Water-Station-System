@@ -1,10 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { getConfigData, saveConfigData } from '../../../src/api/settings.js';
-<<<<<<< HEAD
 import './settings.css';
-=======
-import '../../../src/settings.css';
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 
 function buildItems(data, type) {
   return data.map((item, index) => ({ id: `${type}-${index}`, value: item }));

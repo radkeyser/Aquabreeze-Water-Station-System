@@ -10,11 +10,7 @@ import {
 } from '../../../src/api/pautang.js';
 import { formatPeso } from '../../../src/utils/format.js';
 import { showToast as notify } from '../../../src/utils/toast.js';
-<<<<<<< HEAD
 import './pautang.css';
-=======
-import '../../../src/pautang.css';
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 
 const HIDDEN_KEY = 'pautangHiddenIds';
 const SEARCH_KEY = 'pautangSearchQuery';

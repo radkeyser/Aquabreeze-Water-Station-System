@@ -2,10 +2,7 @@
 import DataTable from '../../../src/scripts/DataTable.jsx';
 import SearchInput from '../../../src/scripts/Searchinput.jsx';
 import { getReportsData } from '../../../src/api/reports';
-<<<<<<< HEAD
 import './reports.css';
-=======
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 
 const TABS = [
   { key: 'sales', label: 'Products Sold' },

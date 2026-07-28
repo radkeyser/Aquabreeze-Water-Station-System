@@ -1,10 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { showToast as notify } from '../../../src/utils/toast.js';
 import './pos.css';
-<<<<<<< HEAD
 import '../../../src/index.css';
-=======
->>>>>>> 1ab3d3f76c3a8e0e1f43eccc85b0ae7f68d97422
 import {
   getPosInitData,
   completeSaleBatch,
