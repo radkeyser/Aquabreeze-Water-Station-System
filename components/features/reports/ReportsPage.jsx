@@ -34,6 +34,15 @@ function formatPeso(amount) {
   return '₱' + Number(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function formatTime(timeStr) {
+  if (!timeStr) return '';
+  const match = String(timeStr).match(/(\d{1,2}):(\d{2})/);
+  if (match) return `${match[1].padStart(2, '0')}:${match[2]}`;
+  const d = new Date(timeStr);
+  if (!Number.isNaN(d.getTime())) return d.toTimeString().slice(0, 5);
+  return timeStr;
+}
+
 function normalizeSales(rows = []) {
   return rows.map((r) => ({
     orderId: r.order_id || r.orderId || r.id || '',
@@ -193,6 +202,17 @@ export default function ReportsPage() {
   const [pointPerson, setPointPerson] = useState('');
   const [product, setProduct] = useState('');
   const [status, setStatus] = useState('');
+  const [sortCol, setSortCol] = useState(null);
+  const [sortDir, setSortDir] = useState('asc');
+
+  function handleSort(colKey) {
+    if (sortCol === colKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortCol(colKey);
+      setSortDir('asc');
+    }
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -256,12 +276,23 @@ export default function ReportsPage() {
         return true;
       })
       .sort((a, b) => {
+        if (sortCol) {
+          const va = a[sortCol];
+          const vb = b[sortCol];
+          let cmp;
+          if (typeof va === 'number' && typeof vb === 'number') {
+            cmp = va - vb;
+          } else {
+            cmp = String(va ?? '').localeCompare(String(vb ?? ''), undefined, { numeric: true });
+          }
+          return sortDir === 'asc' ? cmp : -cmp;
+        }
         const dateA = new Date(a.date || '');
         const dateB = new Date(b.date || '');
         if (!Number.isNaN(dateA) && !Number.isNaN(dateB)) return dateB - dateA;
         return 0;
       });
-  }, [activeTab, normalized, dateFilter, customFrom, customTo, search, pointPerson, product, status]);
+  }, [activeTab, normalized, dateFilter, customFrom, customTo, search, pointPerson, product, status, sortCol, sortDir]);
 
   const columns = useMemo(() => {
     switch (activeTab) {
@@ -269,7 +300,7 @@ export default function ReportsPage() {
         return [
           { key: 'orderId', label: 'Order ID', sortable: true, sortProps: { 'data-col': 'orderid', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
           { key: 'date', label: 'Date', sortable: true, sortProps: { 'data-col': 'date', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
-          { key: 'time', label: 'Time', sortable: true, sortProps: { 'data-col': 'time', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
+          { key: 'time', label: 'Time', render: (row) => formatTime(row.time), sortable: true, sortProps: { 'data-col': 'time', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
           { key: 'customer', label: 'Customer', sortable: true, sortProps: { 'data-col': 'customer', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
           { key: 'slimPoly', label: 'Slim/Poly', sortable: true, sortProps: { 'data-col': 'slimpoly', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
           { key: 'product', label: 'Product', sortable: true, sortProps: { 'data-col': 'product', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
@@ -284,7 +315,7 @@ export default function ReportsPage() {
         return [
           { key: 'id', label: 'ID' },
           { key: 'date', label: 'Date' },
-          { key: 'time', label: 'Time' },
+          { key: 'time', label: 'Time', render: (row) => formatTime(row.time) },
           { key: 'description', label: 'Description' },
           { key: 'amount', label: 'Amount', align: 'right', render: (row) => formatPeso(row.amount) },
         ];
@@ -292,7 +323,7 @@ export default function ReportsPage() {
         return [
           { key: 'orderId', label: 'Order ID' },
           { key: 'date', label: 'Date' },
-          { key: 'time', label: 'Time' },
+          { key: 'time', label: 'Time', render: (row) => formatTime(row.time) },
           { key: 'customerName', label: 'Customer' },
           { key: 'pointPerson', label: 'Point Person' },
           { key: 'amount', label: 'Balance', align: 'right', render: (row) => formatPeso(row.amount) },
@@ -302,7 +333,7 @@ export default function ReportsPage() {
         return [
           { key: 'id', label: 'ID' },
           { key: 'date', label: 'Date' },
-          { key: 'time', label: 'Time' },
+          { key: 'time', label: 'Time', render: (row) => formatTime(row.time) },
           { key: 'orderId', label: 'Order ID' },
           { key: 'description', label: 'Description' },
           { key: 'pointPerson', label: 'Point Person' },
@@ -312,7 +343,7 @@ export default function ReportsPage() {
         return [
           { key: 'id', label: 'ID' },
           { key: 'date', label: 'Date' },
-          { key: 'time', label: 'Time' },
+          { key: 'time', label: 'Time', render: (row) => formatTime(row.time) },
           { key: 'staff', label: 'Staff' },
           { key: 'amount', label: 'Amount', align: 'right', render: (row) => formatPeso(row.amount) },
         ];
@@ -320,7 +351,7 @@ export default function ReportsPage() {
         const base = [
           { key: 'shiftId', label: 'Shift ID' },
           { key: 'date', label: 'Date' },
-          { key: 'time', label: 'Time' },
+          { key: 'time', label: 'Time', render: (row) => formatTime(row.time) },
           { key: 'status', label: 'Status' },
         ];
         const extraKeys = [];
@@ -352,7 +383,7 @@ export default function ReportsPage() {
           { key: 'customerId', label: 'Customer ID' },
           { key: 'customerName', label: 'Customer Name' },
           { key: 'date', label: 'Date' },
-          { key: 'time', label: 'Time' },
+          { key: 'time', label: 'Time', render: (row) => formatTime(row.time) },
           { key: 'gallon', label: 'Gallons', align: 'center' },
           { key: 'dispenser', label: 'Dispensers', align: 'center' },
         ];
@@ -369,6 +400,8 @@ export default function ReportsPage() {
 
   useEffect(() => {
     setCurrentPage(1);
+    setSortCol(null);
+    setSortDir('asc');
   }, [activeTab, dateFilter, search, pointPerson, product, status]);
 
   const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
@@ -615,6 +648,9 @@ export default function ReportsPage() {
                   rows={paginatedRows}
                   footerData={footerData}
                   emptyLabel="No records found"
+                  sortCol={sortCol}
+                  sortDir={sortDir}
+                  onSort={handleSort}
                 />
               </div>
             </div>

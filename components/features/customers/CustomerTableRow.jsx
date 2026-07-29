@@ -85,6 +85,17 @@ export default function CustomerTableRow({
         )}
       </td>
       <td>
+        {customer.isActive ? (
+          <span className="status-badge-active">
+            <span className="material-icons-outlined" style={{ fontSize: 13 }}>check_circle</span>Active
+          </span>
+        ) : (
+          <span className="status-badge-inactive">
+            <span className="material-icons-outlined" style={{ fontSize: 13 }}>pause_circle</span>Inactive
+          </span>
+        )}
+      </td>
+      <td>
         <div className="payroll-actions">
           <button type="button" className="payroll-edit-btn customer-edit-btn" onClick={() => onEdit(customer)} title="Edit">
             <span className="material-icons-outlined">edit</span>

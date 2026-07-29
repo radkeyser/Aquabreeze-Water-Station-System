@@ -14,12 +14,27 @@ export function buildUnchargedUtangMap(pautangRows) {
   return map;
 }
 
-function mapCustomer(row, unchargedMap) {
+export function buildLastOrderDateMap(salesRows) {
+  const map = {};
+  (salesRows || []).forEach((row) => {
+    const key = `${String(row.customer_name || '').toLowerCase()}|${String(row.location || '').toLowerCase()}`;
+    const ts = new Date(row.date).getTime();
+    if (!ts) return;
+    if (!map[key] || ts > map[key]) map[key] = ts;
+  });
+  return map;
+}
+
+function mapCustomer(row, unchargedMap, lastOrderMap, cutoffMs) {
   const id = String(row.customer_id);
+  const name = String(row.name || '');
+  const location = String(row.location || '');
+  const key = `${name.toLowerCase()}|${location.toLowerCase()}`;
+  const lastOrderTs = lastOrderMap[key] || 0;
   return {
     id,
-    name: String(row.name || ''),
-    location: String(row.location || ''),
+    name,
+    location,
     pointPerson: String(row.point_person || ''),
     utang: unchargedMap[id] ?? 0,
     gallon: Number(row.gallon) || 0,
@@ -28,20 +43,26 @@ function mapCustomer(row, unchargedMap) {
     override5gal: Number(row.override_5gal) || 0,
     override500: Number(row.override_500ml) || 0,
     override1000: Number(row.override_1000ml) || 0,
+    lastOrderDate: lastOrderTs ? formatDate(new Date(lastOrderTs)) : '',
+    isActive: lastOrderTs >= cutoffMs,
   };
 }
 
 export async function getCustomers() {
-  const [custRes, pautangRes] = await Promise.all([
+  const [custRes, pautangRes, salesRes] = await Promise.all([
     supabase.from('customers').select('*').order('name', { ascending: true }),
     supabase.from('pautang').select('customer_id,customer_name,amount,status,charge_status'),
+    supabase.from('sales').select('customer_name,location,date'),
   ]);
 
   if (custRes.error) throw custRes.error;
   if (pautangRes.error) throw pautangRes.error;
+  if (salesRes.error) throw salesRes.error;
 
   const unchargedMap = buildUnchargedUtangMap(pautangRes.data || []);
-  return (custRes.data || []).map((row) => mapCustomer(row, unchargedMap));
+  const lastOrderMap = buildLastOrderDateMap(salesRes.data || []);
+  const cutoffMs = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  return (custRes.data || []).map((row) => mapCustomer(row, unchargedMap, lastOrderMap, cutoffMs));
 }
 
 export async function getStaff() {

@@ -19,7 +19,7 @@ import { formatPeso } from '../../../src/utils/format.js';
 import './customers.css';
 
 const PAGE_SIZE = 10;
-const SORT_COLS = ['name', 'location', 'pointPerson', 'gallon', 'dispenser', 'utang'];
+const SORT_COLS = ['name', 'location', 'pointPerson', 'gallon', 'dispenser', 'utang', 'status'];
 
 function customerPayload(c) {
   return {
@@ -72,6 +72,7 @@ export default function CustomersPage() {
 
   const [searchQ, setSearchQ] = useState('');
   const [ppFilter, setPpFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [sortCol, setSortCol] = useState('');
   const [sortDir, setSortDir] = useState(1);
   const [page, setPage] = useState(1);
@@ -141,20 +142,22 @@ export default function CustomersPage() {
         || (c.location || '').toLowerCase().includes(q)
         || (c.pointPerson || '').toLowerCase().includes(q);
       const matchPP = !pp || (c.pointPerson || '').toLowerCase() === pp;
-      return matchQ && matchPP;
+      const matchStatus = !statusFilter
+        || (statusFilter === 'active' ? c.isActive : !c.isActive);
+      return matchQ && matchPP && matchStatus;
     });
     if (sortCol) {
       list = [...list].sort((a, b) => {
-        const va = a[sortCol];
-        const vb = b[sortCol];
+        const va = sortCol === 'status' ? (a.isActive ? 1 : 0) : a[sortCol];
+        const vb = sortCol === 'status' ? (b.isActive ? 1 : 0) : b[sortCol];
         if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * sortDir;
         return String(va || '').localeCompare(String(vb || '')) * sortDir;
       });
     }
     return list;
-  }, [customers, searchQ, ppFilter, sortCol, sortDir]);
+  }, [customers, searchQ, ppFilter, statusFilter, sortCol, sortDir]);
 
-  const isFiltering = !!(searchQ.trim() || ppFilter);
+  const isFiltering = !!(searchQ.trim() || ppFilter || statusFilter);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const pageData = useMemo(() => {
@@ -163,7 +166,7 @@ export default function CustomersPage() {
     return filtered.slice(start, start + PAGE_SIZE);
   }, [filtered, isFiltering, currentPage]);
 
-  useEffect(() => { setPage(1); }, [searchQ, ppFilter, sortCol, sortDir]);
+  useEffect(() => { setPage(1); }, [searchQ, ppFilter, statusFilter, sortCol, sortDir]);
 
   function toggleSort(col) {
     if (sortCol === col) setSortDir((d) => d * -1);
@@ -501,6 +504,17 @@ export default function CustomersPage() {
         </div>
       </div>
 
+      <div className="borrowed-totals-bar">
+        <div className="borrowed-total-item">
+          <span className="material-icons-outlined">water_drop</span>
+          <span>{customers.reduce((s, c) => s + (Number(c.gallon) || 0), 0)} Gallon(s) currently out</span>
+        </div>
+        <div className="borrowed-total-item">
+          <span className="material-icons-outlined">inventory_2</span>
+          <span>{customers.reduce((s, c) => s + (Number(c.dispenser) || 0), 0)} Dispenser(s) currently out</span>
+        </div>
+      </div>
+
       <div className="customers-filter-bar">
         <span className="filter-bar-label">
           <span className="material-icons-outlined">filter_list</span> Point Person:
@@ -515,6 +529,19 @@ export default function CustomersPage() {
           {deliveryBoys.map((s) => (
             <option key={s.id} value={s.name.toLowerCase()}>{s.name}</option>
           ))}
+        </select>
+        <span className="filter-bar-label" style={{ marginLeft: 8 }}>
+          <span className="material-icons-outlined">toggle_on</span> Status:
+        </span>
+        <select
+          className="filter-person-select"
+          id="customerStatusFilter"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">All</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
         </select>
         <div className="mass-edit-bar" id="massEditBar" style={{ display: massEditMode ? 'flex' : 'none' }}>
           <span id="massEditCount" style={{ fontSize: 13, color: 'hsl(var(--muted-fg))' }}>

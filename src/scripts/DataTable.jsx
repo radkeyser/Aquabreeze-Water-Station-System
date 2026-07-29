@@ -12,7 +12,7 @@ import EmptyState from './EmptyState.jsx';
  * yet, just a consistent shell every page can feed data into once the
  * Supabase queries land.
  */
-export default function DataTable({ columns, rows = [], emptyLabel = 'No records found', footerData, id, tableClassName }) {
+export default function DataTable({ columns, rows = [], emptyLabel = 'No records found', footerData, id, tableClassName, sortCol, sortDir, onSort }) {
   return (
     <table id={id} className={clsx('data-table w-full text-sm border-collapse', tableClassName)}>
       <thead>
@@ -31,8 +31,9 @@ export default function DataTable({ columns, rows = [], emptyLabel = 'No records
                     style={col.sortProps?.style}
                     data-col={col.sortProps?.['data-col']}
                     data-table={col.sortProps?.['data-table']}
+                    onClick={() => onSort?.(col.key)}
                   >
-                    {"\u2195"}
+                    {sortCol === col.key ? (sortDir === 'asc' ? '\u2191' : '\u2193') : '\u2195'}
                   </span>
                 )}
               </span>
