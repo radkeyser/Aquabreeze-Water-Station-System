@@ -178,11 +178,12 @@ export async function getShiftStatus() {
   return { isOpen: (data || []).length > 0, shift: data?.[0] || null };
 }
 
-export async function payPautang(orderIds, amountPaid) {
+export async function payPautang(orderIds, amountPaid, paymentMethod = 'Cash') {
   const ids = Array.isArray(orderIds) ? orderIds : [orderIds];
   const { data, error } = await supabase.rpc('pay_pautang', {
     order_ids: ids,
     amount_paid: amountPaid,
+    payment_method: paymentMethod === 'GCash' ? 'GCash' : 'Cash',
   });
 
   if (error) throw error;

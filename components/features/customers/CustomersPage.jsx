@@ -105,6 +105,7 @@ export default function CustomersPage() {
   const [payOrderId, setPayOrderId] = useState(null);
   const [payDebt, setPayDebt] = useState(0);
   const [payAmount, setPayAmount] = useState('');
+  const [payMethod, setPayMethod] = useState('Cash');
   const [submitting, setSubmitting] = useState(false);
 
   const showToast = useCallback((msg) => notify(msg), []);
@@ -411,6 +412,7 @@ export default function CustomersPage() {
     setPayDebt(debt);
     setActiveCustomer((c) => c || { name: customerName });
     setPayAmount('');
+    setPayMethod('Cash');
     setPayOpen(true);
   }
 
@@ -419,7 +421,7 @@ export default function CustomersPage() {
     if (amount <= 0) { showToast('Please enter a valid amount.'); return; }
     setSubmitting(true);
     try {
-      const result = await payPautang([payOrderId], amount);
+      const result = await payPautang([payOrderId], amount, payMethod);
       if (result?.success === false) throw new Error(result.message);
       showToast(result?.message || 'Payment recorded!');
       setPayOpen(false);
@@ -1111,6 +1113,16 @@ export default function CustomersPage() {
                 <input type="number" className="pdp-input" id="custPayModalAmount" placeholder="0.00" min={0} max={payDebt} value={payAmount} onChange={(e) => setPayAmount(e.target.value)} />
                 <button type="button" className="btn-exact" id="custPayModalExact" onClick={() => setPayAmount(String(payDebt))}>Exact</button>
               </div>
+            </div>
+            <div className="pdp-pay-method-row">
+              <label className="pdp-pay-method-option">
+                <input type="radio" name="custPayModalMethod" value="Cash" checked={payMethod === 'Cash'} onChange={() => setPayMethod('Cash')} />
+                <span className="material-icons-outlined">payments</span> Cash
+              </label>
+              <label className="pdp-pay-method-option">
+                <input type="radio" name="custPayModalMethod" value="GCash" checked={payMethod === 'GCash'} onChange={() => setPayMethod('GCash')} />
+                <span className="material-icons-outlined">smartphone</span> GCash
+              </label>
             </div>
             <div className={`pdp-status-pill ${payStatusClass}`} id="custPayModalStatus">
               <span className="material-icons-outlined">{payStatusIcon}</span>

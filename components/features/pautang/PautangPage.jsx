@@ -87,6 +87,7 @@ export default function PautangPage() {
   const [payingCustomer, setPayingCustomer] = useState('');
   const [payingProduct, setPayingProduct] = useState('');
   const [payAmount, setPayAmount] = useState('');
+  const [payMethod, setPayMethod] = useState('Cash');
   const [paySubmitting, setPaySubmitting] = useState(false);
 
   const [ppPopover, setPpPopover] = useState(null);
@@ -211,6 +212,7 @@ export default function PautangPage() {
     setPayingCustomer(customer);
     setPayingProduct(product || '');
     setPayAmount('');
+    setPayMethod('Cash');
     setPayModalOpen(true);
     setBreakdownModalOpen(false);
   }
@@ -236,7 +238,7 @@ export default function PautangPage() {
     }
     setPaySubmitting(true);
     try {
-      const result = await payPautang(payingOrderIds, amount);
+      const result = await payPautang(payingOrderIds, amount, payMethod);
       if (result?.success === false) throw new Error(result.message || 'Payment failed.');
       showToast(result?.message || 'Payment recorded!');
       setPayModalOpen(false);
@@ -537,6 +539,16 @@ export default function PautangPage() {
                   Exact
                 </button>
               </div>
+            </div>
+            <div className="pdp-pay-method-row">
+              <label className="pdp-pay-method-option">
+                <input type="radio" name="payModalMethod" value="Cash" checked={payMethod === 'Cash'} onChange={() => setPayMethod('Cash')} />
+                <span className="material-icons-outlined">payments</span> Cash
+              </label>
+              <label className="pdp-pay-method-option">
+                <input type="radio" name="payModalMethod" value="GCash" checked={payMethod === 'GCash'} onChange={() => setPayMethod('GCash')} />
+                <span className="material-icons-outlined">smartphone</span> GCash
+              </label>
             </div>
             <div className={`pdp-status-pill ${payStatusClass}`} id="payModalStatus">
               <span className="material-icons-outlined">{payStatusIcon}</span>
