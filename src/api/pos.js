@@ -115,6 +115,7 @@ export function buildCheckoutPayload(cart, clientRequestId) {
       commissionRate: item.commissionRate || 0,
       tip: item.tip || 0,
       notes: item.notes || '',
+      paymentMethod: item.paymentMethod || 'Cash',
     });
   });
 

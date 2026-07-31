@@ -439,6 +439,29 @@ body {
 .dash-chart-wrap { flex:1; min-height:0; padding:14px; position:relative; }
 .dash-chart-wrap canvas { width:100% !important; height:100% !important; }
 
+/* GCASH SHARED POS PAUTANG CUSTOMERS */
+.pdp-pay-method-row {
+  display: flex;
+  gap: 10px;
+}
+.pdp-pay-method-option {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px; font-weight: 600; color: var(--muted-fg);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.pdp-pay-method-option input[type="radio"] { accent-color: var(--primary); }
+.pdp-pay-method-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--accent);
+  color: var(--primary-dark);
+}
+.pdp-pay-method-option .material-icons-outlined { font-size: 16px; }
+
 @media (max-width: 1280px) { .dash-stat-row { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 1100px) {
   .dash-stat-row { grid-template-columns: repeat(3, 1fr); gap:6px; }

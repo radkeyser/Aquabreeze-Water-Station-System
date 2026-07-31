@@ -17,6 +17,7 @@ import {
 } from '../../../src/api/customers.js';
 import { formatPeso } from '../../../src/utils/format.js';
 import './customers.css';
+import '../../../src/index.css';
 
 const PAGE_SIZE = 10;
 const SORT_COLS = ['name', 'location', 'pointPerson', 'gallon', 'dispenser', 'utang', 'status'];

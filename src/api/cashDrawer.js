@@ -72,7 +72,11 @@ export async function getCashDrawerData() {
   if (cashRes.error) throw cashRes.error;
   if (dayReportRes.error) throw dayReportRes.error;
 
-  const rows = cashRes.data || [];
+  // GCash payments never touch the physical cash drawer — exclude them
+  // entirely from Cash Drawer math/display. They live in cash_transactions instead.
+  const rows = (cashRes.data || []).filter(
+    (row) => String(row.payment_method || 'Cash').toLowerCase() !== 'gcash'
+  );
   const startingCash = normalizeStartingCash((dayReportRes.data || [])[0]);
   const expectedCash = calculateExpectedCash(startingCash, rows);
 

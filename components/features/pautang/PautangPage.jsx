@@ -11,6 +11,7 @@ import {
 import { formatPeso } from '../../../src/utils/format.js';
 import { showToast as notify } from '../../../src/utils/toast.js';
 import './pautang.css';
+import '../../../src/index.css';
 
 const HIDDEN_KEY = 'pautangHiddenIds';
 const SEARCH_KEY = 'pautangSearchQuery';

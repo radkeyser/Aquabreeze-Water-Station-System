@@ -63,6 +63,7 @@ export default function POSPage() {
   const [overrideActive, setOverrideActive] = useState(false);
   const [slimPoly, setSlimPoly] = useState('');
   const [amountPaid, setAmountPaid] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [tip, setTip] = useState(0);
   const [notes, setNotes] = useState('');
   const [pointPerson, setPointPerson] = useState('');
@@ -234,6 +235,7 @@ export default function POSPage() {
     setOverrideActive(false);
     setSlimPoly('');
     setAmountPaid(0);
+    setPaymentMethod('Cash');
     setTip(0);
     setNotes('');
     setPointPerson('');
@@ -299,7 +301,7 @@ export default function POSPage() {
     const status = isPickup ? 'Paid' : panelStatus;
 
     setCart((current) => {
-      const existing = current.find((i) => i.productId === selectedProduct.id && i.customer === customerName && !i.isBorrow && i.slimPoly === slimPoly);
+      const existing = current.find((i) => i.productId === selectedProduct.id && i.customer === customerName && !i.isBorrow && i.slimPoly === slimPoly && (i.paymentMethod || 'Cash') === paymentMethod);
       if (existing) {
         return current.map((i) => {
           if (i.id !== existing.id) return i;
@@ -309,7 +311,7 @@ export default function POSPage() {
           return { ...i, qty: newQty, total: newTotal, amountPaid: newPaid, status: newPaid >= newTotal ? 'Paid' : newPaid > 0 ? 'Partial' : 'Utang' };
         });
       }
-      return [...current, { id: `${selectedProduct.id}-${Date.now()}`, productId: selectedProduct.id, productName: selectedProduct.name, price: activePrice, qty, customer: customerName, location, pointPerson, total, amountPaid: paid, tip, notes, status, slimPoly, commissionRate: selectedProduct.commissionRate || 0, isNewCustomer, isBorrow: false }];
+      return [...current, { id: `${selectedProduct.id}-${Date.now()}`, productId: selectedProduct.id, productName: selectedProduct.name, price: activePrice, qty, customer: customerName, location, pointPerson, total, amountPaid: paid, tip, notes, status, slimPoly, commissionRate: selectedProduct.commissionRate || 0, isNewCustomer, isBorrow: false, paymentMethod }];
     });
 
     closePanel();
@@ -404,6 +406,7 @@ export default function POSPage() {
     setOverrideActive(false);
     setSlimPoly(item.slimPoly || '');
     setAmountPaid(item.amountPaid || 0);
+    setPaymentMethod(item.paymentMethod || 'Cash');
     setTip(item.tip || 0);
     setNotes(item.notes || '');
     setPointPerson(item.pointPerson || '');
@@ -437,7 +440,7 @@ export default function POSPage() {
     const customerName = chosenCustomer?.isPickup ? 'Pickup Customer' : (chosenCustomer?.name || item.customer);
     const location = chosenCustomer?.isPickup ? '' : (chosenCustomer?.location || item.location || '');
 
-    setCart((current) => current.map((row, idx) => idx !== editCartIndex ? row : { ...row, price: activePrice, qty, total, amountPaid: paid, status, customer: customerName, location, pointPerson, slimPoly, tip, notes }));
+    setCart((current) => current.map((row, idx) => idx !== editCartIndex ? row : { ...row, price: activePrice, qty, total, amountPaid: paid, status, customer: customerName, location, pointPerson, slimPoly, tip, notes, paymentMethod }));
 
     closeEditCartModal();
     showToast('Cart item updated.', { icon: 'check_circle' });
@@ -617,6 +620,7 @@ export default function POSPage() {
                     <div className="cart-row-meta">
                       <span className={`badge ${item.isBorrow ? 'badge-warning' : item.status === 'Paid' ? 'badge-success' : item.status === 'Partial' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: 11 }}>{item.isBorrow ? 'Borrow' : item.status}</span>
                       {item.pointPerson ? <> · {item.pointPerson}</> : null}
+                      {item.paymentMethod === 'GCash' && item.amountPaid > 0 ? <> · <span className="material-icons-outlined" style={{ fontSize: 12 }}>smartphone</span>GCash</> : null}
                       {item.tip > 0 ? <> · Tip: {formatPeso(item.tip)}</> : null}
                     </div>
                     {item.notes ? <div className="cart-row-meta cart-row-notes"><span className="material-icons-outlined">notes</span>{item.notes}</div> : null}
@@ -751,6 +755,16 @@ export default function POSPage() {
             <div className="pdp-amount-row">
               <input type="number" className="pdp-input" id="pdpAmountPaid" placeholder="0.00" min="0" value={amountPaid} onChange={(e) => setAmountPaid(Number(e.target.value) || 0)} />
               <button type="button" className="btn-exact" id="pdpExactBtn" onClick={() => setAmountPaid(panelTotal)}>Exact</button>
+            </div>
+            <div className="pdp-pay-method-row">
+              <label className="pdp-pay-method-option">
+                <input type="radio" name="pdpPayMethod" value="Cash" checked={paymentMethod === 'Cash'} onChange={() => setPaymentMethod('Cash')} />
+                <span className="material-icons-outlined">payments</span> Cash
+              </label>
+              <label className="pdp-pay-method-option">
+                <input type="radio" name="pdpPayMethod" value="GCash" checked={paymentMethod === 'GCash'} onChange={() => setPaymentMethod('GCash')} />
+                <span className="material-icons-outlined">smartphone</span> GCash
+              </label>
             </div>
             <div className={`pdp-status-pill ${panelStatus === 'Paid' ? 'status-paid' : panelStatus === 'Partial' ? 'status-partial' : 'status-utang'}`} id="pdpStatusPill">
               <span className="material-icons-outlined">{panelStatus === 'Paid' ? 'check_circle' : panelStatus === 'Partial' ? 'pie_chart' : 'schedule'}</span>
@@ -893,6 +907,16 @@ export default function POSPage() {
                 <div className="pdp-amount-row">
                   <input type="number" className="pdp-input" id="editCartAmountPaid" placeholder="0.00" min="0" value={amountPaid} onChange={(e) => setAmountPaid(Number(e.target.value) || 0)} />
                   <button type="button" className="btn-exact" id="editCartExactBtn" onClick={() => setAmountPaid(panelTotal)}>Exact</button>
+                </div>
+                <div className="pdp-pay-method-row">
+                  <label className="pdp-pay-method-option">
+                    <input type="radio" name="editCartPayMethod" value="Cash" checked={paymentMethod === 'Cash'} onChange={() => setPaymentMethod('Cash')} />
+                    <span className="material-icons-outlined">payments</span> Cash
+                  </label>
+                  <label className="pdp-pay-method-option">
+                    <input type="radio" name="editCartPayMethod" value="GCash" checked={paymentMethod === 'GCash'} onChange={() => setPaymentMethod('GCash')} />
+                    <span className="material-icons-outlined">smartphone</span> GCash
+                  </label>
                 </div>
                 <div className={`pdp-status-pill ${panelStatus === 'Paid' ? 'status-paid' : panelStatus === 'Partial' ? 'status-partial' : 'status-utang'}`} id="editCartStatusPill">
                   <span className="material-icons-outlined">{panelStatus === 'Paid' ? 'check_circle' : panelStatus === 'Partial' ? 'pie_chart' : 'schedule'}</span>
