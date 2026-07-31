@@ -175,3 +175,47 @@
 #rtable-borrowed .borrow-time-cell {
   font-size: 14px;
 }
+
+/* =============================================
+   REPORTS — Cash/GCash MOP summary
+   ============================================= */
+.mop-summary-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.mop-card {
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow);
+}
+.mop-cash  { background: hsl(150,40%,94%); border: 1px solid hsl(150,40%,75%); }
+.mop-gcash { background: hsl(210,70%,94%); border: 1px solid hsl(210,60%,78%); }
+.mop-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 700;
+  margin-bottom: 6px;
+}
+.mop-cash  .mop-label { color: hsl(150,40%,28%); }
+.mop-gcash .mop-label { color: hsl(210,60%,32%); }
+.mop-label .material-icons-outlined { font-size: 17px; }
+.mop-val {
+  font-size: 24px; font-weight: 800;
+}
+.mop-cash  .mop-val { color: hsl(150,40%,25%); }
+.mop-gcash .mop-val { color: hsl(210,60%,30%); }
+
+@media (max-width: 640px) {
+  .mop-summary-row { grid-template-columns: 1fr; }
+}
+
+/* ── Inline payment-method tag in table cells ─────────────────── */
+.mop-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+}
+.mop-tag .material-icons-outlined { font-size: 14px; }
+.mop-tag-cash  { background: hsl(150,40%,92%); color: hsl(150,40%,28%); }
+.mop-tag-gcash { background: hsl(210,70%,92%); color: hsl(210,60%,32%); }

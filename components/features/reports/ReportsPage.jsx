@@ -30,6 +30,12 @@ const STATUS_OPTIONS = [
   { value: 'void', label: 'Void' },
 ];
 
+const PAYMENT_METHOD_OPTIONS = [
+  { value: '', label: 'All Payment Methods' },
+  { value: 'cash', label: 'Cash' },
+  { value: 'gcash', label: 'GCash' },
+];
+
 function formatPeso(amount) {
   return '₱' + Number(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -57,6 +63,7 @@ function normalizeSales(rows = []) {
     amountPaid: Number(r.amount_paid || r.amountPaid || r.amount || 0),
     status: String(r.status || '').trim(),
     notes: r.notes || '',
+    paymentMethod: r.payment_method || r.paymentMethod || 'Cash',
   }));
 }
 
@@ -91,6 +98,7 @@ function normalizeCollections(rows = []) {
     description: r.description || '',
     pointPerson: r.point_person || r.pointPerson || '',
     amount: Number(r.amount || 0),
+    paymentMethod: r.payment_method || r.paymentMethod || 'Cash',
   }));
 }
 
@@ -202,6 +210,7 @@ export default function ReportsPage() {
   const [pointPerson, setPointPerson] = useState('');
   const [product, setProduct] = useState('');
   const [status, setStatus] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
 
@@ -272,6 +281,7 @@ export default function ReportsPage() {
           if (pointPerson && row.pointPerson.toLowerCase() !== pointPerson.toLowerCase()) return false;
           if (product && row.product.toLowerCase() !== product.toLowerCase()) return false;
           if (status && row.status.toLowerCase() !== status.toLowerCase()) return false;
+          if (paymentMethod && (row.paymentMethod || 'Cash').toLowerCase() !== paymentMethod.toLowerCase()) return false;
         }
         return true;
       })
@@ -292,7 +302,7 @@ export default function ReportsPage() {
         if (!Number.isNaN(dateA) && !Number.isNaN(dateB)) return dateB - dateA;
         return 0;
       });
-  }, [activeTab, normalized, dateFilter, customFrom, customTo, search, pointPerson, product, status, sortCol, sortDir]);
+  }, [activeTab, normalized, dateFilter, customFrom, customTo, search, pointPerson, product, status, paymentMethod, sortCol, sortDir]);
 
   const columns = useMemo(() => {
     switch (activeTab) {
@@ -309,6 +319,18 @@ export default function ReportsPage() {
           { key: 'total', label: 'Total', align: 'right', render: (row) => formatPeso(row.total), sortable: true, sortProps: { 'data-col': 'total', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
           { key: 'amountPaid', label: 'Paid', align: 'right', render: (row) => formatPeso(row.amountPaid), sortable: true, sortProps: { 'data-col': 'amountpaid', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
           { key: 'status', label: 'Status', sortable: true, sortProps: { 'data-col': 'status', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
+          {
+            key: 'paymentMethod',
+            label: 'Payment Method',
+            sortable: true,
+            sortProps: { 'data-col': 'paymentmethod', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } },
+            render: (row) => (
+              <span className={`mop-tag ${row.paymentMethod === 'GCash' ? 'mop-tag-gcash' : 'mop-tag-cash'}`}>
+                <span className="material-icons-outlined">{row.paymentMethod === 'GCash' ? 'smartphone' : 'payments'}</span>
+                {row.paymentMethod === 'GCash' ? 'GCash' : 'Cash'}
+              </span>
+            ),
+          },
           { key: 'notes', label: 'Notes', sortable: true, sortProps: { 'data-col': 'notes', 'data-table': 'sales', style: { cursor: 'pointer', userSelect: 'none', color: 'var(--border)', fontSize: '13px' } } },
         ];
       case 'expenses':
@@ -338,6 +360,16 @@ export default function ReportsPage() {
           { key: 'description', label: 'Description' },
           { key: 'pointPerson', label: 'Point Person' },
           { key: 'amount', label: 'Amount', align: 'right', render: (row) => formatPeso(row.amount) },
+          {
+            key: 'paymentMethod',
+            label: 'Payment Method',
+            render: (row) => (
+              <span className={`mop-tag ${row.paymentMethod === 'GCash' ? 'mop-tag-gcash' : 'mop-tag-cash'}`}>
+                <span className="material-icons-outlined">{row.paymentMethod === 'GCash' ? 'smartphone' : 'payments'}</span>
+                {row.paymentMethod === 'GCash' ? 'GCash' : 'Cash'}
+              </span>
+            ),
+          },
         ];
       case 'advances':
         return [
@@ -635,9 +667,39 @@ export default function ReportsPage() {
                       <option key={item.value} value={item.value}>{item.label}</option>
                     ))}
                   </select>
+                  <select className="filter-person-select" id="rFilter-paymethod" value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
+                    {PAYMENT_METHOD_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>{item.label}</option>
+                    ))}
+                  </select>
                 </>
               )}
             </div>
+
+            {(tab.key === 'sales' || tab.key === 'collections') && (
+              <div className="mop-summary-row" id={`mopSummary-${tab.key}`}>
+                <div className="mop-card mop-cash">
+                  <div className="mop-label"><span className="material-icons-outlined">payments</span>Cash Collected</div>
+                  <div className="mop-val" id={`mopCashVal-${tab.key}`}>
+                    {formatPeso(filteredRows.reduce((sum, row) => {
+                      if (tab.key === 'sales' && row.status === 'Void') return sum;
+                      if ((row.paymentMethod || 'Cash') === 'GCash') return sum;
+                      return sum + (tab.key === 'sales' ? row.amountPaid : row.amount);
+                    }, 0))}
+                  </div>
+                </div>
+                <div className="mop-card mop-gcash">
+                  <div className="mop-label"><span className="material-icons-outlined">smartphone</span>GCash Collected</div>
+                  <div className="mop-val" id={`mopGcashVal-${tab.key}`}>
+                    {formatPeso(filteredRows.reduce((sum, row) => {
+                      if (tab.key === 'sales' && row.status === 'Void') return sum;
+                      if ((row.paymentMethod || 'Cash') !== 'GCash') return sum;
+                      return sum + (tab.key === 'sales' ? row.amountPaid : row.amount);
+                    }, 0))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="card">
               <div className="card-body" style={{ overflowX: 'auto' }}>

@@ -15,11 +15,17 @@ export async function getReportsData() {
   const pautang = s3.error ? [] : s3.data || [];
   const customers = s4.error ? [] : s4.data || [];
 
-  // Derive collections and advances from cash_drawer heuristics
-  const collections = cashDrawer.filter((r) => r.type === 'in');
-  const advances = cashDrawer.filter((r) => /advance/i.test(r.description || ''));
-  const expenses = cashDrawer.filter((r) => r.type === 'out' && !/advance/i.test(r.description || ''));
-
+  // Derive collections, expenses, advances from cash_drawer — mirrors GAS logic
+  const collections = cashDrawer.filter(
+    (r) => r.type === 'in' && /^pautang payment/i.test(r.description || '')
+  );
+  const advances = cashDrawer.filter(
+    (r) => r.type === 'out' && /^advance/i.test(r.description || '')
+  );
+  const expenses = cashDrawer.filter(
+    (r) => r.type === 'out' && !/^salary/i.test(r.description || '') && !/^advance/i.test(r.description || '')
+  );
+  
   // Fetch shifts and day_report too
   const [s5, s6] = await Promise.all([
     supabase.from('shift').select('*'),
