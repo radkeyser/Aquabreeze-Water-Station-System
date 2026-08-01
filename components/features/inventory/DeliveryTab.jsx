@@ -187,12 +187,12 @@ export default function DeliveryTab() {
 
       {/* Add Delivery modal */}
       <div className={`pay-modal-overlay${formOpen ? ' show' : ''}`}>
-        <div className="pay-modal" style={{ maxWidth: 460 }}>
+        <div className="pay-modal inv-delivery-modal">
           <div className="pay-modal-header">
             <div className="pay-modal-title"><span className="material-icons-outlined" style={{ verticalAlign: 'middle', marginRight: 6, fontSize: 18 }}>local_shipping</span>Record Delivery</div>
             <button type="button" className="pdp-close-btn" onClick={() => setFormOpen(false)}><span className="material-icons-outlined">close</span></button>
           </div>
-          <div className="pay-modal-body">
+          <div className="pay-modal-body inv-delivery-modal-body">
             {step === 'form' ? (
               <>
                 <div className="pdp-field">

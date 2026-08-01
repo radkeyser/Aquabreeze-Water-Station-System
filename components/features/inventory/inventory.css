@@ -1122,6 +1122,31 @@
   font-weight: 900;
 }
 
+/* ── Delivery Form Modal — fixed height with scroll ─────────── */
+.inv-delivery-modal {
+  width: 460px;
+  max-width: 460px;
+  max-height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+.inv-delivery-modal .pay-modal-header {
+  flex-shrink: 0;
+}
+.inv-delivery-modal-body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 500px) {
+  .inv-delivery-modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 95vh;
+  }
+}
+
 @media (max-width: 500px) {
   #delFormOverlay .pay-modal {
     width: 100%;
