@@ -1,0 +1,347 @@
+/* ── Tab Bar ──────────────────────────────────── */
+.cash-wrapper { display: flex; flex-direction: column; }
+
+.cash-wrapper { display: flex; flex-direction: column; }
+
+.cash-tab-bar {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  background: var(--card);
+  border-bottom: 2px solid var(--border);
+  padding: 0;
+}
+.cash-tab-bar::-webkit-scrollbar { display: none; }
+
+.cash-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px 12px;
+  border: none; border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  background: none; color: var(--muted-fg);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all var(--transition);
+  border-radius: 0; flex-shrink: 0;
+}
+.cash-tab .material-icons-outlined { font-size: 17px; }
+.cash-tab:hover  { color: var(--primary); }
+.cash-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.cash-tab-content { padding: 20px; }
+
+/* Table padding matching inventory */
+.cash-tab-content .card .card-body {
+  padding: 20px 20px;
+}
+
+/* ── Summary Cards ────────────────────────────── */
+.cash-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.cash-summary-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 14px;
+}
+.cash-summary-icon {
+  width: 42px; height: 42px;
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cash-summary-icon .material-icons-outlined { font-size: 20px; }
+.cash-summary-icon.green  { background: hsla(150,45%,42%,0.12); color: hsl(150,45%,38%); }
+.cash-summary-icon.teal   { background: var(--primary-light, hsla(183,42%,46%,0.12)); color: var(--primary); }
+.cash-summary-icon.amber  { background: hsl(38,90%,92%); color: hsl(38,60%,36%); }
+.cash-summary-icon.red    { background: hsla(0,65%,55%,0.1); color: var(--destructive); }
+
+.cash-summary-label { font-size: 12px; color: var(--muted-fg); font-weight: 600; margin-bottom: 2px; }
+.cash-summary-val   { font-size: 18px; font-weight: 800; color: var(--fg); letter-spacing: -0.5px; }
+.cash-summary-sub   { font-size: 11px; color: var(--muted-fg); margin-top: 2px; }
+
+/* ── Section Headers ──────────────────────────── */
+.cash-section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+}
+.cash-section-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 800; color: var(--fg);
+}
+.cash-section-title .material-icons-outlined { font-size: 18px; color: var(--primary); }
+.cash-section-sub { font-size: 12px; color: var(--muted-fg); margin-top: 2px; }
+
+/* ── Action Buttons ───────────────────────────── */
+.cash-btn-primary {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px;
+  background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: filter var(--transition), transform 0.1s;
+}
+.cash-btn-primary:hover:not(:disabled) { filter: brightness(1.08); }
+.cash-btn-primary:active:not(:disabled) { transform: scale(0.97); }
+.cash-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.cash-btn-primary .material-icons-outlined { font-size: 16px; }
+
+.cash-btn-outline {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px;
+  background: var(--card); color: var(--primary);
+  border: 1.5px solid var(--primary); border-radius: var(--radius);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: background var(--transition);
+}
+.cash-btn-outline:hover { background: hsla(183,42%,46%,0.07); }
+.cash-btn-outline .material-icons-outlined { font-size: 15px; }
+
+.cash-btn-ghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: none; color: var(--muted-fg);
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all var(--transition);
+}
+.cash-btn-ghost:hover { border-color: var(--fg); color: var(--fg); }
+
+.cash-action-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Cards ────────────────────────────────────── */
+.cash-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.cash-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.cash-card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700; color: var(--fg);
+}
+.cash-card-title .material-icons-outlined { font-size: 16px; color: var(--primary); }
+.cash-card-balance {
+  font-size: 18px; font-weight: 800; color: var(--primary);
+  letter-spacing: -0.5px;
+}
+.cash-card-body { padding: 14px 16px; }
+
+/* ── Bank Account Cards ───────────────────────── */
+.cash-bank-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.cash-bank-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.cash-bank-card-head {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, hsla(183,42%,46%,0.12), hsla(183,42%,46%,0.04));
+  border-bottom: 1px solid var(--border);
+}
+.cash-bank-name   { font-size: 15px; font-weight: 800; color: var(--fg); }
+.cash-bank-num    { font-size: 11px; color: var(--muted-fg); margin-top: 2px; }
+.cash-bank-bal    { font-size: 22px; font-weight: 800; color: var(--primary); margin-top: 8px; letter-spacing: -0.5px; }
+.cash-bank-actions {
+  padding: 10px 16px;
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+
+/* ── Transaction Table ────────────────────────── */
+.cash-tx-filters {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin-bottom: 14px;
+}
+
+.cash-tx-type-badge {
+  display: inline-block; padding: 2px 9px;
+  border-radius: 20px; font-size: 11px; font-weight: 700;
+}
+.cash-tx-transfer  { background: hsla(270,50%,55%,0.12); color: hsl(270,45%,45%); }
+.cash-tx-deposit   { background: hsla(150,45%,42%,0.12); color: hsl(150,45%,36%); }
+.cash-tx-withdraw  { background: hsla(38,80%,50%,0.12);  color: hsl(38,65%,36%);  }
+.cash-tx-payment   { background: hsla(0,65%,55%,0.10);   color: var(--destructive); }
+.cash-tx-sales     { background: hsla(183,42%,46%,0.12); color: var(--primary); }
+.cash-tx-add       { background: hsla(150,45%,42%,0.12); color: hsl(150,45%,36%); }
+.cash-tx-cash-out  { background: hsla(0,65%,55%,0.10);   color: var(--destructive); }
+.cash-tx-unverified{ background: hsl(38,90%,92%);        color: hsl(38,60%,36%); }
+
+/* ── Shift Verification Table ─────────────────── */
+.cash-shift-table th, .cash-shift-table td { padding: 10px 14px; }
+.cash-verify-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 12px;
+  background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+  cursor: pointer;
+}
+.cash-verify-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cash-verified-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 700; color: hsl(150,45%,38%);
+}
+.cash-verified-badge .material-icons-outlined { font-size: 14px; }
+
+/* ── Reconciliation ───────────────────────────── */
+.cash-recon-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.cash-recon-side {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 14px);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.cash-recon-side-header {
+  padding: 10px 16px;
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 800; color: var(--fg);
+}
+.cash-recon-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.cash-recon-row:last-child { border-bottom: none; }
+.cash-recon-label { color: var(--muted-fg); font-weight: 600; }
+.cash-recon-val   { font-weight: 700; color: var(--fg); }
+.cash-recon-auto  { color: var(--primary); }
+.cash-recon-input-wrap { display: flex; align-items: center; gap: 8px; }
+.cash-recon-input {
+  width: 120px; padding: 6px 10px;
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  text-align: right;
+}
+.cash-recon-input:focus { outline: none; border-color: var(--primary); }
+.cash-recon-total {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--muted);
+  font-size: 14px; font-weight: 800;
+  border-top: 2px solid var(--border);
+}
+.cash-recon-total-val { font-size: 16px; color: var(--primary); }
+
+.cash-recon-status {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px; border-radius: var(--radius-lg, 14px);
+  font-size: 14px; font-weight: 700; margin-bottom: 14px;
+}
+.cash-recon-balanced   { background: hsla(150,45%,42%,0.1); color: hsl(150,45%,36%); border: 1.5px solid hsla(150,45%,42%,0.3); }
+.cash-recon-unbalanced { background: hsla(0,65%,55%,0.08); color: var(--destructive); border: 1.5px solid hsla(0,65%,55%,0.25); }
+.cash-recon-status .material-icons-outlined { font-size: 20px; }
+
+/* ── Month Picker ─────────────────────────────── */
+.cash-month-nav {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px;
+}
+.cash-month-btn {
+  width: 34px; height: 34px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--card); color: var(--fg);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all var(--transition);
+}
+.cash-month-btn:hover:not(:disabled) { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cash-month-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.cash-month-label { font-size: 16px; font-weight: 800; color: var(--fg); }
+
+/* ── Petty Cash Ledger ────────────────────────── */
+.cash-ledger-bal {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: hsla(183,42%,46%,0.06);
+  border: 1.5px solid hsla(183,42%,46%,0.2);
+  border-radius: var(--radius-lg, 14px);
+  margin-bottom: 16px;
+}
+.cash-ledger-bal-label { font-size: 13px; font-weight: 600; color: var(--muted-fg); }
+.cash-ledger-bal-val   { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+
+/* ── Confirm Modal Rows ───────────────────────── */
+.cash-conf-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.cash-conf-row:last-child { border-bottom: none; }
+.cash-conf-label { color: var(--muted-fg); font-weight: 600; }
+.cash-conf-val   { font-weight: 700; color: var(--fg); }
+.cash-conf-bold .cash-conf-val { font-size: 15px; color: var(--primary); }
+
+/* ── Tab bar (shared visual language with Inventory) ── */
+.inv-wrapper { display: flex; flex-direction: column; }
+.inv-tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; border-bottom: 1px solid var(--border); }
+.inv-tab-bar::-webkit-scrollbar { display: none; }
+.inv-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px 12px; border: none; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; background: none; color: var(--muted-fg);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all var(--transition); flex-shrink: 0;
+}
+.inv-tab:hover { color: var(--primary); }
+.inv-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.inv-tab .material-icons-outlined { font-size: 17px; }
+@media (max-width: 600px) { .inv-tab-label { display: none; } .inv-tab { padding: 10px 14px 12px; } }
+
+/* ── Generic paginator (used by TransactionTable) ── */
+.paginator { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 0 4px; }
+.paginator-btn {
+  padding: 6px 12px; border: 1.5px solid var(--border); border-radius: var(--radius);
+  background: var(--card); color: var(--muted-fg); font-family: var(--font);
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition);
+}
+.paginator-btn:hover { border-color: var(--primary); color: var(--primary); }
+.paginator-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+.paginator-info { font-size: 12px; color: var(--muted-fg); }
+
+/* ── Reused from inventory's delivery price card ── */
+.inv-delivery-price-card { background: var(--accent); border: 1.5px solid var(--primary-light); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.inv-dpc-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+.inv-dpc-label { color: var(--muted-fg); font-weight: 600; }
+.inv-dpc-val { font-weight: 700; color: var(--fg); }
+.inv-dpc-total { padding-top: 8px; border-top: 1px solid var(--primary-light); margin-top: 2px; }
+.inv-dpc-total-val { font-size: 16px; font-weight: 800; color: var(--primary); }
+
+/* ── Responsive ───────────────────────────────── */
+@media (max-width: 900px) {
+  .cash-summary-grid { grid-template-columns: 1fr 1fr; }
+  .cash-recon-grid   { grid-template-columns: 1fr; }
+  .cash-bank-cards   { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .cash-summary-grid { grid-template-columns: 1fr; }
+  .cash-tab          { padding: 10px 12px 12px; font-size: 12px; }
+}
