@@ -306,7 +306,7 @@ export default function PayrollPage() {
     const rate = parseFloat(addForm.rate) || 0;
     if (!name) { showToast('Please enter a name.'); return; }
     if (!role) { showToast('Please select a role.'); return; }
-    if (!isCommission && !rate) { showToast('Please enter daily rate.'); return; }
+    if (!isCommission && !rate) { showToast('Please enter hourly rate.'); return; }
     setSubmitting(true);
     try {
       const payload = { name, role, type: addForm.type, dailyRate: rate };
@@ -361,7 +361,7 @@ export default function PayrollPage() {
     const isCommission = editForm.type === 'Commission-Based';
     if (!name) { showToast('Please enter a name.'); return; }
     if (!editForm.role) { showToast('Please select a role.'); return; }
-    if (!isCommission && !parseFloat(editForm.rate)) { showToast('Please enter daily rate.'); return; }
+    if (!isCommission && !parseFloat(editForm.rate)) { showToast('Please enter hourly rate.'); return; }
     setSubmitting(true);
     try {
       const payload = {
@@ -1053,13 +1053,13 @@ export default function PayrollPage() {
                 <input type="number" className="pdp-input" min="0" placeholder="0.00" disabled={!editForm.philHealthEnabled} value={editForm.philHealth} onChange={(e) => setEditForm((f) => ({ ...f, philHealth: e.target.value }))} />
               </div>
             </div>
-            </div>
             <div className="edit-expected-preview">
               Net Pay:
               {' '}
               <strong style={{ color: editPreview < 0 ? 'hsl(var(--destructive))' : editPreview > 0 ? 'hsl(150,45%,38%)' : 'hsl(var(--primary))' }}>
                 {formatPeso(editPreview)}
               </strong>
+            </div>
             </div>
             <button type="button" className="btn-primary" disabled={submitting} onClick={handleEditStaff}>
               {submitting ? 'Saving...' : 'Save Changes'}

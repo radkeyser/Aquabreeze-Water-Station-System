@@ -168,6 +168,7 @@
   padding: 12px 16px;
   font-size: 14px;
   color: var(--muted-fg);
+  margin-top: 16px;
 }
 .edit-expected-preview strong { color: var(--primary-dark); font-size: 18px; }
 
