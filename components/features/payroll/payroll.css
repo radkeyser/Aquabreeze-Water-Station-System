@@ -171,6 +171,23 @@
 }
 .edit-expected-preview strong { color: var(--primary-dark); font-size: 18px; }
 
+.payroll-modal-scroll {
+  max-height: 46vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+  margin-right: -8px;
+  margin-bottom: 14px;
+  scrollbar-gutter: stable;
+}
+.payroll-modal-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.payroll-modal-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
 .payroll-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .btn-advance {

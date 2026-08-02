@@ -221,8 +221,9 @@ export default function PayrollPage() {
 
   const editPreview = useMemo(() => {
     if (!editForm) return 0;
+    const isCommission = editForm.type === 'Commission-Based';
     return calcExpected(
-      editForm.rate,
+      isCommission ? 0 : editForm.rate,
       editForm.days,
       editForm.advance,
       editForm.commission,
@@ -725,7 +726,7 @@ export default function PayrollPage() {
                 </th>
                 <th className="payroll-col-name payroll-col-sticky">Name</th>
                 <th className="payroll-col-role">Role</th>
-                <th className="payroll-col-rate">Daily Rate</th>
+                <th className="payroll-col-rate">Hourly Rate</th>
                 <th className="payroll-col-days">Hours</th>
                 <th className="payroll-col-advance">Advance</th>
                 <th className="payroll-col-commission">Commission</th>
@@ -927,6 +928,7 @@ export default function PayrollPage() {
 
       {/* Add Staff */}
       <Modal open={addStaffOpen} onClose={() => setAddStaffOpen(false)} title="Add New Staff" maxWidth={440}>
+        <div className="payroll-modal-scroll">
         <div className="pdp-field">
           <label className="pdp-label" htmlFor="addStaffName">Name</label>
           <input id="addStaffName" className="pdp-input" placeholder="Full name..." value={addForm.name} onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))} />
@@ -947,7 +949,7 @@ export default function PayrollPage() {
         </div>
         {addForm.type !== 'Commission-Based' ? (
           <div className="pdp-field">
-            <label className="pdp-label" htmlFor="addStaffRate">Daily Rate</label>
+            <label className="pdp-label" htmlFor="addStaffRate">Hourly Rate</label>
             <input id="addStaffRate" type="number" className="pdp-input" placeholder="0.00" min="0" value={addForm.rate} onChange={(e) => setAddForm((f) => ({ ...f, rate: e.target.value }))} />
           </div>
         ) : (
@@ -970,6 +972,7 @@ export default function PayrollPage() {
             </div>
           </>
         )}
+        </div>
         <button type="button" className="btn-primary" disabled={submitting} onClick={handleAddStaff}>
           {submitting ? 'Adding...' : 'Add Staff'}
         </button>
@@ -979,6 +982,7 @@ export default function PayrollPage() {
       <Modal open={editStaffOpen && !!editForm} onClose={() => { setEditStaffOpen(false); setEditForm(null); }} title="Edit Staff" maxWidth={500}>
         {editForm && (
           <>
+            <div className="payroll-modal-scroll">
             <div className="pdp-field">
               <label className="pdp-label" htmlFor="editStaffType">Salary Type</label>
               <select id="editStaffType" className="pdp-select" value={editForm.type} onChange={(e) => setEditForm((f) => ({ ...f, type: e.target.value }))}>
@@ -1000,7 +1004,7 @@ export default function PayrollPage() {
               </div>
               {editForm.type !== 'Commission-Based' && (
                 <div className="pdp-field">
-                  <label className="pdp-label" htmlFor="editStaffRate">Daily Rate</label>
+                  <label className="pdp-label" htmlFor="editStaffRate">Hourly Rate</label>
                   <input id="editStaffRate" type="number" className="pdp-input" min="0" value={editForm.rate} onChange={(e) => setEditForm((f) => ({ ...f, rate: e.target.value }))} />
                 </div>
               )}
@@ -1048,6 +1052,7 @@ export default function PayrollPage() {
                 </label>
                 <input type="number" className="pdp-input" min="0" placeholder="0.00" disabled={!editForm.philHealthEnabled} value={editForm.philHealth} onChange={(e) => setEditForm((f) => ({ ...f, philHealth: e.target.value }))} />
               </div>
+            </div>
             </div>
             <div className="edit-expected-preview">
               Net Pay:
