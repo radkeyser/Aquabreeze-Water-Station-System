@@ -76,6 +76,11 @@ declare
   v_unpaid        numeric;
   v_gallon        numeric;
   v_dispenser     numeric;
+  v_pay_method    text;
+  v_tx_id         text;
+  v_staff_row     staff%rowtype;
+  v_effective_rate numeric;
+  v_pid           text;
   v_prod_count_ids text[] := array['PROD-000008','PROD-000009','PROD-000010','PROD-000011'];
 begin
   v_request_id := batch->>'clientRequestId';
@@ -132,10 +137,12 @@ begin
       v_unpaid   := greatest(0, v_total - v_paid);
       v_pautang_id := '';
 
+      v_pay_method := case when v_item->>'paymentMethod' = 'GCash' then 'GCash' else 'Cash' end;
+
       insert into sales (
         order_id, date, time, customer_name, location, product, quantity,
         point_person, total_amount, amount_paid, status, recorded,
-        slim_poly, product_id, tip, notes
+        slim_poly, product_id, tip, notes, payment_method
       ) values (
         v_order_id,
         v_date,
@@ -152,7 +159,8 @@ begin
         coalesce(v_item->>'slimPoly', ''),
         v_item->>'id',
         coalesce((v_item->>'tip')::numeric, 0),
-        coalesce(v_item->>'notes', '')
+        coalesce(v_item->>'notes', ''),
+        v_pay_method
       );
 
       -- Prod count tracking
@@ -180,12 +188,32 @@ begin
         );
       end if;
 
-      -- Commission
-      if coalesce((v_item->>'commissionRate')::numeric, 0) > 0
-         and coalesce(v_payload->>'pointPerson', '') <> '' then
+      -- Commission — Commission-Based staff use per-product rates from
+      -- their Staff record; everyone else falls back to the product's
+      -- flat commission_rate (same as before staff types existed).
+      v_pid := coalesce(v_item->>'id', '');
+
+      select * into v_staff_row
+      from staff
+      where lower(trim(name)) = lower(trim(coalesce(v_payload->>'pointPerson', '')))
+      limit 1;
+
+      if found and v_staff_row.type = 'Commission-Based' then
+        v_effective_rate := case v_pid
+          when 'PROD-000001' then coalesce(v_staff_row.commission_5gal, 0)
+          when 'PROD-000002' then coalesce(v_staff_row.commission_1000ml, 0)
+          when 'PROD-000004' then coalesce(v_staff_row.commission_500ml, 0)
+          when 'PROD-000005' then coalesce(v_staff_row.commission_slim, 0)
+          else 0
+        end;
+      else
+        v_effective_rate := coalesce((v_item->>'commissionRate')::numeric, 0);
+      end if;
+
+      if v_effective_rate > 0 and coalesce(v_payload->>'pointPerson', '') <> '' then
         insert into commissions (
           order_id, date, customer_name, location, product, quantity,
-          point_person, total_commission
+          point_person, total_commission, delivered
         ) values (
           v_order_id,
           v_date,
@@ -194,7 +222,8 @@ begin
           v_item->>'name',
           coalesce((v_item->>'qty')::numeric, 0),
           v_payload->>'pointPerson',
-          coalesce((v_item->>'commissionRate')::numeric, 0) * coalesce((v_item->>'qty')::numeric, 0)
+          v_effective_rate * coalesce((v_item->>'qty')::numeric, 0),
+          'Undelivered'
         );
       end if;
 
@@ -229,7 +258,7 @@ begin
         v_cd_id := public.next_id('CD'::text);
         insert into cash_drawer (
           id, date, time, type, order_id, customer_id,
-          description, amount, point_person, shift_id, pautang_id
+          description, amount, point_person, shift_id, pautang_id, payment_method
         ) values (
           v_cd_id,
           v_date,
@@ -241,8 +270,33 @@ begin
           v_paid,
           coalesce(v_payload->>'pointPerson', ''),
           v_shift_id,
-          v_pautang_id
+          v_pautang_id,
+          v_pay_method
         );
+
+        if v_pay_method = 'GCash' then
+          v_tx_id := public.next_id('TXN'::text);
+          insert into cash_transactions (
+            tx_id, date, time, type, from_account, to_account,
+            amount, reference_number, description, shift_id, status
+          ) values (
+            v_tx_id,
+            v_date,
+            v_time,
+            'Sales',
+            null,
+            'ACC-000003',
+            v_paid,
+            v_order_id,
+            'GCash sale payment - ' || v_cust_name,
+            v_shift_id,
+            'Verified'
+          );
+
+          update cash_accounts
+          set balance = balance + v_paid
+          where account_id = 'ACC-000003';
+        end if;
       end if;
 
       -- Logbook (skip pickup customer)

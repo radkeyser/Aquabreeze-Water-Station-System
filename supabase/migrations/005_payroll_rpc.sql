@@ -9,7 +9,8 @@ set search_path = public
 as $$
   select coalesce(sum(total_commission), 0)
   from commissions
-  where lower(trim(coalesce(point_person, ''))) = lower(trim(coalesce(p_name, '')));
+  where lower(trim(coalesce(point_person, ''))) = lower(trim(coalesce(p_name, '')))
+    and delivered = 'Delivered';
 $$;
 
 create or replace function add_staff(data jsonb)

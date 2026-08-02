@@ -575,3 +575,19 @@
   .days-controls { flex-shrink: 0; }
   .payroll-actions { flex-wrap: nowrap; justify-content: center; }
 }
+
+.hours-input {
+  width: 70px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+.hours-input:focus { outline: none; border-color: var(--primary); }
+
+#payrollTable .payroll-col-gov { width: 95px; min-width: 95px; }

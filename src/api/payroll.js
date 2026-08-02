@@ -1,11 +1,14 @@
 import { supabase } from '../supabaseClient';
 import { formatDate, formatTime } from '../utils/format';
 
-export function calcExpected(rate, days, advance, commission, debtCharge) {
+export function calcExpected(rate, days, advance, commission, debtCharge, sss = 0, pagibig = 0, philhealth = 0) {
   return (Number(rate) || 0) * (Number(days) || 0)
     - (Number(advance) || 0)
     + (Number(commission) || 0)
-    - (Number(debtCharge) || 0);
+    - (Number(debtCharge) || 0)
+    - (Number(sss) || 0)
+    - (Number(pagibig) || 0)
+    - (Number(philhealth) || 0);
 }
 
 async function getStaffCommission(name) {
@@ -14,12 +17,15 @@ async function getStaffCommission(name) {
   return Number(data) || 0;
 }
 
-function mapPayrollRow(row, commission) {
+function mapPayrollRow(row, commission, staffInfo = {}) {
   const daysWorked = Number(row.days_worked) || 0;
   const dailyRate = Number(row.daily_rate) || 0;
   const advance = Number(row.advance) || 0;
   const debtCharge = Number(row.debt_charge) || 0;
-  const expectedSalary = calcExpected(dailyRate, daysWorked, advance, commission, debtCharge);
+  const sss = Number(row.sss) || 0;
+  const pagibig = Number(row.pagibig) || 0;
+  const philhealth = Number(row.philhealth) || 0;
+  const expectedSalary = calcExpected(dailyRate, daysWorked, advance, commission, debtCharge, sss, pagibig, philhealth);
 
   return {
     id: row.staff_id,
@@ -30,31 +36,46 @@ function mapPayrollRow(row, commission) {
     advance,
     commission,
     debtCharge,
+    sss,
+    pagibig,
+    philhealth,
     expectedSalary,
     status: String(row.status || 'Pending'),
     dateReleased: row.date_released ? formatDate(row.date_released) : '',
     timeReleased: row.time_released ? formatTime(row.time_released) : '',
+    type: staffInfo.type || 'Salary-Based',
+    commission5Gal: Number(staffInfo.commission_5gal) || 0,
+    commission1000mL: Number(staffInfo.commission_1000ml) || 0,
+    commission500mL: Number(staffInfo.commission_500ml) || 0,
+    commissionSlim: Number(staffInfo.commission_slim) || 0,
   };
 }
 
 export async function getPayrollData() {
-  const { data, error } = await supabase
-    .from('payroll')
-    .select('*')
-    .order('name', { ascending: true });
+  const [{ data, error }, staffRes] = await Promise.all([
+    supabase.from('payroll').select('*').order('name', { ascending: true }),
+    supabase.from('staff').select('*'),
+  ]);
 
   if (error) throw error;
+  if (staffRes.error) throw staffRes.error;
+
+  const staffMap = {};
+  (staffRes.data || []).forEach((s) => {
+    staffMap[String(s.name || '').trim().toLowerCase()] = s;
+  });
 
   const rows = data || [];
   const employees = await Promise.all(
     rows.map(async (row) => {
       const commission = await getStaffCommission(row.name);
-      return mapPayrollRow(row, commission);
+      const staffInfo = staffMap[String(row.name || '').trim().toLowerCase()] || {};
+      return mapPayrollRow(row, commission, staffInfo);
     })
   );
 
   return employees;
-}
+} 
 
 export async function getConfigRoles() {
   const { data, error } = await supabase
@@ -188,6 +209,15 @@ export async function updateDaysWorked(staffId, delta) {
   return data;
 }
 
+export async function setHoursWorked(staffId, hours) {
+  const { data, error } = await supabase.rpc('set_hours_worked', {
+    p_staff_id: staffId,
+    p_hours: hours,
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function addAdvance(staffId, amount) {
   const { data, error } = await supabase.rpc('add_advance', {
     p_staff_id: staffId,
@@ -232,4 +262,5 @@ export default {
   clearPayrollRows,
   chargeDebtsForStaff,
   calcExpected,
+  setHoursWorked,
 };

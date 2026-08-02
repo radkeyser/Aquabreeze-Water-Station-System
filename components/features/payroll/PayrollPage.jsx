@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { showToast as notify } from '../../../src/utils/toast.js';
 import {
   addAdvance,
   addStaff,
@@ -14,7 +15,7 @@ import {
   getShiftStatus,
   payPautang,
   releasePay,
-  updateDaysWorked,
+  setHoursWorked,
   updatePayroll,
 } from '../../../src/api/payroll.js';
 import { formatPeso } from '../../../src/utils/format.js';
@@ -149,7 +150,10 @@ export default function PayrollPage() {
   const [chargeDebtPayOpen, setChargeDebtPayOpen] = useState(false);
   const [chargeDebtsConfirmOpen, setChargeDebtsConfirmOpen] = useState(false);
 
-  const [addForm, setAddForm] = useState({ name: '', role: '', rate: '' });
+  const [addForm, setAddForm] = useState({
+    name: '', role: '', rate: '', type: 'Salary-Based',
+    commission5Gal: '', commission1000mL: '', commission500mL: '', commissionSlim: '',
+  });
   const [editForm, setEditForm] = useState(null);
   const [advanceForm, setAdvanceForm] = useState({ staffId: '', amount: '' });
   const [releasingEmployee, setReleasingEmployee] = useState(null);
@@ -168,7 +172,7 @@ export default function PayrollPage() {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const showToast = useCallback((message) => notify(message), []);
+  const showToast = useCallback((message, options) => notify(message, options), []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -222,7 +226,10 @@ export default function PayrollPage() {
       editForm.days,
       editForm.advance,
       editForm.commission,
-      editForm.debtCharge
+      editForm.debtCharge,
+      editForm.sssEnabled ? editForm.sss : 0,
+      editForm.pagIbigEnabled ? editForm.pagIbig : 0,
+      editForm.philHealthEnabled ? editForm.philHealth : 0
     );
   }, [editForm]);
 
@@ -273,9 +280,10 @@ export default function PayrollPage() {
     return fresh.find((e) => e.id === staffId);
   };
 
-  const handleDaysDelta = async (staffId, delta) => {
+  const handleHoursChange = async (staffId, newHours) => {
+    const hours = Math.max(0, parseFloat(newHours) || 0);
     try {
-      const result = await updateDaysWorked(staffId, delta);
+      const result = await setHoursWorked(staffId, hours);
       if (result.success) {
         setEmployees((prev) => prev.map((e) => (
           e.id === staffId
@@ -283,31 +291,39 @@ export default function PayrollPage() {
             : e
         )));
       } else {
-        showToast(result.message || 'Error updating days.');
+        showToast(result.message || 'Error updating hours.');
       }
     } catch (err) {
-      handleRpcError(err, '005_payroll_rpc.sql');
+      handleRpcError(err, '007_payroll_extended_rpc.sql');
     }
   };
 
   const handleAddStaff = async () => {
     const name = addForm.name.trim();
     const role = addForm.role;
+    const isCommission = addForm.type === 'Commission-Based';
     const rate = parseFloat(addForm.rate) || 0;
     if (!name) { showToast('Please enter a name.'); return; }
     if (!role) { showToast('Please select a role.'); return; }
-    if (!rate) { showToast('Please enter daily rate.'); return; }
+    if (!isCommission && !rate) { showToast('Please enter daily rate.'); return; }
     setSubmitting(true);
     try {
-      const result = await addStaff({ name, role, dailyRate: rate });
+      const payload = { name, role, type: addForm.type, dailyRate: rate };
+      if (isCommission) {
+        payload.commission5Gal = parseFloat(addForm.commission5Gal) || 0;
+        payload.commission1000mL = parseFloat(addForm.commission1000mL) || 0;
+        payload.commission500mL = parseFloat(addForm.commission500mL) || 0;
+        payload.commissionSlim = parseFloat(addForm.commissionSlim) || 0;
+      }
+      const result = await addStaff(payload);
       showToast(result.message);
       if (result.success) {
         setAddStaffOpen(false);
-        setAddForm({ name: '', role: '', rate: '' });
+        setAddForm({ name: '', role: '', rate: '', type: 'Salary-Based', commission5Gal: '', commission1000mL: '', commission500mL: '', commissionSlim: '' });
         await loadData();
       }
     } catch (err) {
-      handleRpcError(err, '005_payroll_rpc.sql');
+      handleRpcError(err, '007_payroll_extended_rpc.sql');
     } finally {
       setSubmitting(false);
     }
@@ -318,11 +334,22 @@ export default function PayrollPage() {
       id: emp.id,
       name: emp.name,
       role: emp.role,
+      type: emp.type || 'Salary-Based',
       rate: emp.dailyRate,
       days: emp.daysWorked,
       advance: emp.advance,
       commission: emp.commission,
       debtCharge: emp.debtCharge,
+      commission5Gal: emp.commission5Gal || '',
+      commission1000mL: emp.commission1000mL || '',
+      commission500mL: emp.commission500mL || '',
+      commissionSlim: emp.commissionSlim || '',
+      sssEnabled: emp.sss > 0,
+      sss: emp.sss || '',
+      pagIbigEnabled: emp.pagibig > 0,
+      pagIbig: emp.pagibig || '',
+      philHealthEnabled: emp.philhealth > 0,
+      philHealth: emp.philhealth || '',
     });
     setEditStaffOpen(true);
   };
@@ -330,17 +357,33 @@ export default function PayrollPage() {
   const handleEditStaff = async () => {
     if (!editForm) return;
     const name = editForm.name.trim();
+    const isCommission = editForm.type === 'Commission-Based';
     if (!name) { showToast('Please enter a name.'); return; }
     if (!editForm.role) { showToast('Please select a role.'); return; }
+    if (!isCommission && !parseFloat(editForm.rate)) { showToast('Please enter daily rate.'); return; }
     setSubmitting(true);
     try {
-      const result = await updatePayroll(editForm.id, {
+      const payload = {
         name,
         role: editForm.role,
+        type: editForm.type,
         dailyRate: parseFloat(editForm.rate) || 0,
         daysWorked: parseFloat(editForm.days) || 0,
         advance: parseFloat(editForm.advance) || 0,
-      });
+        sssEnabled: !!editForm.sssEnabled,
+        sss: parseFloat(editForm.sss) || 0,
+        pagIbigEnabled: !!editForm.pagIbigEnabled,
+        pagIbig: parseFloat(editForm.pagIbig) || 0,
+        philHealthEnabled: !!editForm.philHealthEnabled,
+        philHealth: parseFloat(editForm.philHealth) || 0,
+      };
+      if (isCommission) {
+        payload.commission5Gal = parseFloat(editForm.commission5Gal) || 0;
+        payload.commission1000mL = parseFloat(editForm.commission1000mL) || 0;
+        payload.commission500mL = parseFloat(editForm.commission500mL) || 0;
+        payload.commissionSlim = parseFloat(editForm.commissionSlim) || 0;
+      }
+      const result = await updatePayroll(editForm.id, payload);
       showToast(result.message);
       if (result.success) {
         setEditStaffOpen(false);
@@ -348,7 +391,7 @@ export default function PayrollPage() {
         await loadData();
       }
     } catch (err) {
-      handleRpcError(err, '005_payroll_rpc.sql');
+      handleRpcError(err, '007_payroll_extended_rpc.sql');
     } finally {
       setSubmitting(false);
     }
@@ -636,7 +679,7 @@ export default function PayrollPage() {
             <span className="material-icons-outlined">savings</span>
             Advance
           </button>
-          <button type="button" className="btn-add-staff" id="addStaffBtn" onClick={() => { setAddForm({ name: '', role: '', rate: '' }); setAddStaffOpen(true); }}>
+          <button type="button" className="btn-add-staff" id="addStaffBtn" onClick={() => { setAddForm({ name: '', role: '', rate: '', type: 'Salary-Based', commission5Gal: '', commission1000mL: '', commission500mL: '', commissionSlim: '' }); setAddStaffOpen(true); }}>
             <span className="material-icons-outlined">person_add</span>
             Add Staff
           </button>
@@ -683,7 +726,7 @@ export default function PayrollPage() {
                 <th className="payroll-col-name payroll-col-sticky">Name</th>
                 <th className="payroll-col-role">Role</th>
                 <th className="payroll-col-rate">Daily Rate</th>
-                <th className="payroll-col-days">Days</th>
+                <th className="payroll-col-days">Hours</th>
                 <th className="payroll-col-advance">Advance</th>
                 <th className="payroll-col-commission">Commission</th>
                 <th>
@@ -693,6 +736,9 @@ export default function PayrollPage() {
                     <span className="material-icons-outlined" style={{ fontSize: 13, verticalAlign: 'middle', color: 'hsl(var(--muted-fg))' }}>info</span>
                   </span>
                 </th>
+                <th className="payroll-col-gov">SSS</th>
+                <th className="payroll-col-gov">Pag-IBIG</th>
+                <th className="payroll-col-gov">PhilHealth</th>
                 <th className="payroll-col-expected">Expected</th>
                 <th className="payroll-col-status">Status</th>
                 <th className="payroll-col-released">Last Released</th>
@@ -702,7 +748,7 @@ export default function PayrollPage() {
             <tbody id="payrollTbody">
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan={12} style={{ textAlign: 'center', padding: 40, color: 'hsl(var(--muted-fg))' }}>
+                  <td colSpan={15} style={{ textAlign: 'center', padding: 40, color: 'hsl(var(--muted-fg))' }}>
                     No staff found
                   </td>
                 </tr>
@@ -739,12 +785,17 @@ export default function PayrollPage() {
                         {formatPeso(emp.dailyRate)}
                       </MaskedCell>
                     </td>
-                    <td className="payroll-col-days" data-label="Days">
-                      <div className="days-controls">
-                        <button type="button" className="days-btn days-minus" data-rowindex={rowIndex} onClick={() => handleDaysDelta(emp.id, -1)}>−</button>
-                        <span className="days-val" id={`days-${rowIndex}`}>{emp.daysWorked}</span>
-                        <button type="button" className="days-btn days-plus" data-rowindex={rowIndex} onClick={() => handleDaysDelta(emp.id, 1)}>+</button>
-                      </div>
+                    <td className="payroll-col-days" data-label="Hours">
+                      <input
+                        type="number"
+                        className="hours-input"
+                        id={`days-${rowIndex}`}
+                        data-rowindex={rowIndex}
+                        defaultValue={emp.daysWorked}
+                        min="0"
+                        step="any"
+                        onBlur={(e) => handleHoursChange(emp.id, e.target.value)}
+                      />
                     </td>
                     <td className="text-danger payroll-col-advance" id={`advance-${rowIndex}`} data-label="Advance">{formatPeso(emp.advance)}</td>
                     <td className="payroll-col-commission" id={`commission-cell-${rowIndex}`} data-label="Commission">
@@ -768,6 +819,21 @@ export default function PayrollPage() {
                         ) : (
                           <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>
                         )}
+                      </MaskedCell>
+                    </td>
+                    <td className="payroll-col-gov" data-label="SSS">
+                      <MaskedCell revealed={revealed} maskId={`sss-mask-${rowIndex}`} valId={`sss-${rowIndex}`}>
+                        {emp.sss > 0 ? formatPeso(emp.sss) : <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>}
+                      </MaskedCell>
+                    </td>
+                    <td className="payroll-col-gov" data-label="Pag-IBIG">
+                      <MaskedCell revealed={revealed} maskId={`pagibig-mask-${rowIndex}`} valId={`pagibig-${rowIndex}`}>
+                        {emp.pagibig > 0 ? formatPeso(emp.pagibig) : <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>}
+                      </MaskedCell>
+                    </td>
+                    <td className="payroll-col-gov" data-label="PhilHealth">
+                      <MaskedCell revealed={revealed} maskId={`philhealth-mask-${rowIndex}`} valId={`philhealth-${rowIndex}`}>
+                        {emp.philhealth > 0 ? formatPeso(emp.philhealth) : <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>}
                       </MaskedCell>
                     </td>
                     <td className="payroll-col-expected" id={`expected-cell-${rowIndex}`} data-label="Expected">
@@ -873,9 +939,37 @@ export default function PayrollPage() {
           </select>
         </div>
         <div className="pdp-field">
-          <label className="pdp-label" htmlFor="addStaffRate">Daily Rate</label>
-          <input id="addStaffRate" type="number" className="pdp-input" placeholder="0.00" min="0" value={addForm.rate} onChange={(e) => setAddForm((f) => ({ ...f, rate: e.target.value }))} />
+          <label className="pdp-label" htmlFor="addStaffType">Salary Type</label>
+          <select id="addStaffType" className="pdp-select" value={addForm.type} onChange={(e) => setAddForm((f) => ({ ...f, type: e.target.value }))}>
+            <option value="Salary-Based">Salary-Based</option>
+            <option value="Commission-Based">Commission-Based</option>
+          </select>
         </div>
+        {addForm.type !== 'Commission-Based' ? (
+          <div className="pdp-field">
+            <label className="pdp-label" htmlFor="addStaffRate">Daily Rate</label>
+            <input id="addStaffRate" type="number" className="pdp-input" placeholder="0.00" min="0" value={addForm.rate} onChange={(e) => setAddForm((f) => ({ ...f, rate: e.target.value }))} />
+          </div>
+        ) : (
+          <>
+            <div className="pdp-field">
+              <label className="pdp-label">Commission - 5 Gallon</label>
+              <input type="number" className="pdp-input" placeholder="0.00" min="0" value={addForm.commission5Gal} onChange={(e) => setAddForm((f) => ({ ...f, commission5Gal: e.target.value }))} />
+            </div>
+            <div className="pdp-field">
+              <label className="pdp-label">Commission - 1000 mL</label>
+              <input type="number" className="pdp-input" placeholder="0.00" min="0" value={addForm.commission1000mL} onChange={(e) => setAddForm((f) => ({ ...f, commission1000mL: e.target.value }))} />
+            </div>
+            <div className="pdp-field">
+              <label className="pdp-label">Commission - 500 mL</label>
+              <input type="number" className="pdp-input" placeholder="0.00" min="0" value={addForm.commission500mL} onChange={(e) => setAddForm((f) => ({ ...f, commission500mL: e.target.value }))} />
+            </div>
+            <div className="pdp-field">
+              <label className="pdp-label">Commission - Slim Gallon</label>
+              <input type="number" className="pdp-input" placeholder="0.00" min="0" value={addForm.commissionSlim} onChange={(e) => setAddForm((f) => ({ ...f, commissionSlim: e.target.value }))} />
+            </div>
+          </>
+        )}
         <button type="button" className="btn-primary" disabled={submitting} onClick={handleAddStaff}>
           {submitting ? 'Adding...' : 'Add Staff'}
         </button>
@@ -885,6 +979,13 @@ export default function PayrollPage() {
       <Modal open={editStaffOpen && !!editForm} onClose={() => { setEditStaffOpen(false); setEditForm(null); }} title="Edit Staff" maxWidth={500}>
         {editForm && (
           <>
+            <div className="pdp-field">
+              <label className="pdp-label" htmlFor="editStaffType">Salary Type</label>
+              <select id="editStaffType" className="pdp-select" value={editForm.type} onChange={(e) => setEditForm((f) => ({ ...f, type: e.target.value }))}>
+                <option value="Salary-Based">Salary-Based</option>
+                <option value="Commission-Based">Commission-Based</option>
+              </select>
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div className="pdp-field">
                 <label className="pdp-label" htmlFor="editStaffName">Name</label>
@@ -897,17 +998,59 @@ export default function PayrollPage() {
                   {roles.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
+              {editForm.type !== 'Commission-Based' && (
+                <div className="pdp-field">
+                  <label className="pdp-label" htmlFor="editStaffRate">Daily Rate</label>
+                  <input id="editStaffRate" type="number" className="pdp-input" min="0" value={editForm.rate} onChange={(e) => setEditForm((f) => ({ ...f, rate: e.target.value }))} />
+                </div>
+              )}
               <div className="pdp-field">
-                <label className="pdp-label" htmlFor="editStaffRate">Daily Rate</label>
-                <input id="editStaffRate" type="number" className="pdp-input" min="0" value={editForm.rate} onChange={(e) => setEditForm((f) => ({ ...f, rate: e.target.value }))} />
-              </div>
-              <div className="pdp-field">
-                <label className="pdp-label" htmlFor="editStaffDays">Days Worked</label>
+                <label className="pdp-label" htmlFor="editStaffDays">Hours Worked</label>
                 <input id="editStaffDays" type="number" className="pdp-input" min="0" value={editForm.days} onChange={(e) => setEditForm((f) => ({ ...f, days: e.target.value }))} />
               </div>
             </div>
+            {editForm.type === 'Commission-Based' && (
+              <>
+                <div className="pdp-field">
+                  <label className="pdp-label">Commission - 5 Gallon</label>
+                  <input type="number" className="pdp-input" placeholder="0.00" min="0" value={editForm.commission5Gal} onChange={(e) => setEditForm((f) => ({ ...f, commission5Gal: e.target.value }))} />
+                </div>
+                <div className="pdp-field">
+                  <label className="pdp-label">Commission - 1000 mL</label>
+                  <input type="number" className="pdp-input" placeholder="0.00" min="0" value={editForm.commission1000mL} onChange={(e) => setEditForm((f) => ({ ...f, commission1000mL: e.target.value }))} />
+                </div>
+                <div className="pdp-field">
+                  <label className="pdp-label">Commission - 500 mL</label>
+                  <input type="number" className="pdp-input" placeholder="0.00" min="0" value={editForm.commission500mL} onChange={(e) => setEditForm((f) => ({ ...f, commission500mL: e.target.value }))} />
+                </div>
+                <div className="pdp-field">
+                  <label className="pdp-label">Commission - Slim Gallon</label>
+                  <input type="number" className="pdp-input" placeholder="0.00" min="0" value={editForm.commissionSlim} onChange={(e) => setEditForm((f) => ({ ...f, commissionSlim: e.target.value }))} />
+                </div>
+              </>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 8 }}>
+              <div className="pdp-field">
+                <label className="pdp-label">
+                  <input type="checkbox" checked={!!editForm.sssEnabled} onChange={(e) => setEditForm((f) => ({ ...f, sssEnabled: e.target.checked }))} /> SSS
+                </label>
+                <input type="number" className="pdp-input" min="0" placeholder="0.00" disabled={!editForm.sssEnabled} value={editForm.sss} onChange={(e) => setEditForm((f) => ({ ...f, sss: e.target.value }))} />
+              </div>
+              <div className="pdp-field">
+                <label className="pdp-label">
+                  <input type="checkbox" checked={!!editForm.pagIbigEnabled} onChange={(e) => setEditForm((f) => ({ ...f, pagIbigEnabled: e.target.checked }))} /> Pag-IBIG
+                </label>
+                <input type="number" className="pdp-input" min="0" placeholder="0.00" disabled={!editForm.pagIbigEnabled} value={editForm.pagIbig} onChange={(e) => setEditForm((f) => ({ ...f, pagIbig: e.target.value }))} />
+              </div>
+              <div className="pdp-field">
+                <label className="pdp-label">
+                  <input type="checkbox" checked={!!editForm.philHealthEnabled} onChange={(e) => setEditForm((f) => ({ ...f, philHealthEnabled: e.target.checked }))} /> PhilHealth
+                </label>
+                <input type="number" className="pdp-input" min="0" placeholder="0.00" disabled={!editForm.philHealthEnabled} value={editForm.philHealth} onChange={(e) => setEditForm((f) => ({ ...f, philHealth: e.target.value }))} />
+              </div>
+            </div>
             <div className="edit-expected-preview">
-              Expected Salary:
+              Net Pay:
               {' '}
               <strong style={{ color: editPreview < 0 ? 'hsl(var(--destructive))' : editPreview > 0 ? 'hsl(150,45%,38%)' : 'hsl(var(--primary))' }}>
                 {formatPeso(editPreview)}
