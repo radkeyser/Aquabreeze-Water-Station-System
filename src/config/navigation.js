@@ -1,16 +1,16 @@
 // navigation icons use material icons (rendered as string names)
 
-import DashboardPage from '../../components/features/dashboard/DashboardPage.jsx';
-import POSPage from '../../components/features/pos/POSPage.jsx';
-import CashDrawerPage from '../../components/features/cashDrawer/CashDrawerPage.jsx';
-import InventoryPage from '../../components/features/inventory/InventoryPage.jsx';
-import CashManagementPage from '../../components/features/cashManagement/CashManagementPage.jsx';
-import LogbookPage from '../../components/features/logbook/LogbookPage.jsx';
-import PautangPage from '../../components/features/pautang/PautangPage.jsx';
-import CustomersPage from '../../components/features/customers/CustomersPage.jsx';
-import PayrollPage from '../../components/features/payroll/PayrollPage.jsx';
-import ReportsPage from '../../components/features/reports/ReportsPage.jsx';
-import SettingsPage from '../../components/features/settings/SettingsPage.jsx';
+import DashboardPage from '../components/features/dashboard/DashboardPage.jsx';
+import POSPage from '../components/features/pos/POSPage.jsx';
+import CashDrawerPage from '../components/features/cashDrawer/CashDrawerPage.jsx';
+import InventoryPage from '../components/features/inventory/InventoryPage.jsx';
+import CashManagementPage from '../components/features/cashManagement/CashManagementPage.jsx';
+import LogbookPage from '../components/features/logbook/LogbookPage.jsx';
+import PautangPage from '../components/features/pautang/PautangPage.jsx';
+import CustomersPage from '../components/features/customers/CustomersPage.jsx';
+import PayrollPage from '../components/features/payroll/PayrollPage.jsx';
+import ReportsPage from '../components/features/reports/ReportsPage.jsx';
+import SettingsPage from '../components/features/settings/SettingsPage.jsx';
 
 /**
  * Single source of truth for every top-level page in the app.

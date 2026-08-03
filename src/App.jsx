@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
-import AppLayout from '../components/layouts/AppLayout.jsx';
+import AppLayout from './components/layouts/AppLayout.jsx';
 import { NAV_ITEMS } from './config/navigation.js';
 
 export default function App() {
