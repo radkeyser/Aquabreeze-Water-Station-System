@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import LogbookColumn from './LogbookColumn.jsx';
+import RequireShift from '../../../components/features/shift/RequireShift.jsx';
 import {
   getLogbookData,
   markLogbookDelivered,
@@ -22,7 +23,7 @@ function saveHidden(arr) {
   try { localStorage.setItem(HIDDEN_KEY, JSON.stringify(arr)); } catch { /* ignore */ }
 }
 
-export default function LogbookPage() {
+function LogbookPageContent() {
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -751,5 +752,13 @@ export default function LogbookPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LogbookPage() {
+  return (
+    <RequireShift>
+      <LogbookPageContent />
+    </RequireShift>
   );
 }

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import ShiftHeaderControl from '../../components/features/shift/ShiftHeaderControl.jsx';
 
 // Pages that show the live clock in the header (mirrors the legacy app's
 // "operational" pages — shifts/deliveries happen here).
 const CLOCK_PAGES = ['inventory', 'cash-drawer', 'pautang', 'customers', 'payroll', 'pos', 'logbook'];
+const SHIFT_CONTROL_PAGES = ['pos', 'logbook', 'cash-drawer'];
 
 function useClock(enabled) {
   const [now, setNow] = useState(new Date());
@@ -48,12 +50,7 @@ export default function Header({ navItem, onMenuClick }) {
       </div>
 
       <div className="header-right" id="headerRight">
-        {navItem?.key === 'pos' && (
-          <button type="button" className="btn-end-shift" id="endShiftBtn">
-            <span className="material-icons-outlined">logout</span>
-            End Shift
-          </button>
-        )}
+        {navItem && SHIFT_CONTROL_PAGES.includes(navItem.key) && <ShiftHeaderControl />}
       </div>
     </header>
   );

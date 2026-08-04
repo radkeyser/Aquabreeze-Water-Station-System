@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { showToast as notify } from '../../../utils/toast.js';
+import RequireShift from '../../../components/features/shift/RequireShift.jsx';
 import './pos.css';
 import '../../../index.css';
 import {
@@ -46,7 +47,7 @@ function buildBorrowLabel(gallon, dispenser) {
 
 const PICKUP_CUSTOMER = { id: 'CUST-PICKUP', name: 'Pickup Customer', location: '', pointPerson: '', isPickup: true };
 
-export default function POSPage() {
+function POSPageContent() {
   const [cart, setCart] = useState(() => loadCartFromStorage());
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedBorrow, setSelectedBorrow] = useState(null);
@@ -954,5 +955,13 @@ export default function POSPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function POSPage() {
+  return (
+    <RequireShift>
+      <POSPageContent />
+    </RequireShift>
   );
 }

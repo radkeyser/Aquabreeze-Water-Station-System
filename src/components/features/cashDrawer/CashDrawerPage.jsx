@@ -6,6 +6,7 @@ import {
   getCashDrawerData,
   getConfigExpenses,
 } from '../../../api/cashDrawer.js';
+import RequireShift from '../../../components/features/shift/RequireShift.jsx';
 import { formatPeso } from '../../../utils/format.js';
 import showToast from '../../../utils/toast.js';
 import './cashDrawer.css';
@@ -20,7 +21,7 @@ function isProtectedExpense(description) {
   );
 }
 
-export default function CashDrawerPage() {
+function CashDrawerPageContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -389,5 +390,13 @@ export default function CashDrawerPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CashDrawerPage() {
+  return (
+    <RequireShift>
+      <CashDrawerPageContent />
+    </RequireShift>
   );
 }
