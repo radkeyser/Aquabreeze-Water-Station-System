@@ -46,7 +46,7 @@ export async function getPosInitData() {
     supabase
       .from('products')
       .select('product_id,name,price,type,commission_rate,pickup_price')
-      .order('name', { ascending: true }),
+      .order('product_id', { ascending: true }),
     supabase
       .from('customers')
       .select('customer_id,name,location,point_person,override,override_5gal,override_500ml,override_1000ml')
