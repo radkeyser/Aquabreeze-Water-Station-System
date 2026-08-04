@@ -269,9 +269,9 @@ export default function PayrollPage() {
 
   const handleRpcError = (err, migrationFile) => {
     if (err?.code === 'PGRST202') {
-      showToast(`Payroll RPC not set up. Run ${migrationFile} in Supabase SQL Editor.`);
+      showToast(`Payroll RPC not set up. Run ${migrationFile} in Supabase SQL Editor.`, { type: 'error' });
     } else {
-      showToast(err?.message || 'Something went wrong.');
+      showToast(err?.message || 'Something went wrong.', { type: 'error' });
     }
   };
 
@@ -292,10 +292,10 @@ export default function PayrollPage() {
             : e
         )));
       } else {
-        showToast(result.message || 'Error updating hours.');
+        showToast(result.message || 'Error updating hours.', { type: 'error' });
       }
     } catch (err) {
-      handleRpcError(err, '007_payroll_extended_rpc.sql');
+      handleRpcError(err, '007_payroll_extended_rpc.sql', { type: 'error' });
     }
   };
 
@@ -304,9 +304,9 @@ export default function PayrollPage() {
     const role = addForm.role;
     const isCommission = addForm.type === 'Commission-Based';
     const rate = parseFloat(addForm.rate) || 0;
-    if (!name) { showToast('Please enter a name.'); return; }
-    if (!role) { showToast('Please select a role.'); return; }
-    if (!isCommission && !rate) { showToast('Please enter hourly rate.'); return; }
+    if (!name) { showToast('Please enter a name.', { type: 'error' }); return; }
+    if (!role) { showToast('Please select a role.', { type: 'error' }); return; }
+    if (!isCommission && !rate) { showToast('Please enter hourly rate.', { type: 'error' }); return; }
     setSubmitting(true);
     try {
       const payload = { name, role, type: addForm.type, dailyRate: rate };
@@ -317,7 +317,7 @@ export default function PayrollPage() {
         payload.commissionSlim = parseFloat(addForm.commissionSlim) || 0;
       }
       const result = await addStaff(payload);
-      showToast(result.message);
+      showToast(result.message, { type: result.success ? 'success' : 'error' });
       if (result.success) {
         setAddStaffOpen(false);
         setAddForm({ name: '', role: '', rate: '', type: 'Salary-Based', commission5Gal: '', commission1000mL: '', commission500mL: '', commissionSlim: '' });
@@ -359,9 +359,9 @@ export default function PayrollPage() {
     if (!editForm) return;
     const name = editForm.name.trim();
     const isCommission = editForm.type === 'Commission-Based';
-    if (!name) { showToast('Please enter a name.'); return; }
-    if (!editForm.role) { showToast('Please select a role.'); return; }
-    if (!isCommission && !parseFloat(editForm.rate)) { showToast('Please enter hourly rate.'); return; }
+    if (!name) { showToast('Please enter a name.', { type: 'error' }); return; }
+    if (!editForm.role) { showToast('Please select a role.', { type: 'error' }); return; }
+    if (!isCommission && !parseFloat(editForm.rate)) { showToast('Please enter hourly rate.', { type: 'error' }); return; }
     setSubmitting(true);
     try {
       const payload = {
@@ -385,7 +385,7 @@ export default function PayrollPage() {
         payload.commissionSlim = parseFloat(editForm.commissionSlim) || 0;
       }
       const result = await updatePayroll(editForm.id, payload);
-      showToast(result.message);
+      showToast(result.message, { type: result.success ? 'success' : 'error' });
       if (result.success) {
         setEditStaffOpen(false);
         setEditForm(null);
@@ -401,13 +401,13 @@ export default function PayrollPage() {
   const handleAdvance = async () => {
     const staffId = advanceForm.staffId;
     const amount = parseFloat(advanceForm.amount) || 0;
-    if (!staffId) { showToast('Please select a staff member.'); return; }
-    if (amount <= 0) { showToast('Please enter a valid amount.'); return; }
-    if (!shiftOpen) { showToast('Please open a shift first.'); return; }
+    if (!staffId) { showToast('Please select a staff member.', { type: 'error' }); return; }
+    if (amount <= 0) { showToast('Please enter a valid amount.', { type: 'error' }); return; }
+    if (!shiftOpen) { showToast('Please open a shift first.', { type: 'error' }); return; }
     setSubmitting(true);
     try {
       const result = await addAdvance(staffId, amount);
-      showToast(result.message);
+      showToast(result.message, { type: result.success ? 'success' : 'error' });
       if (result.success) {
         setAdvanceOpen(false);
         setAdvanceForm({ staffId: '', amount: '' });
@@ -429,7 +429,7 @@ export default function PayrollPage() {
     setSubmitting(true);
     try {
       const result = await releasePay(releasingEmployee.id);
-      showToast(result.message);
+      showToast(result.message, { type: result.success ? 'success' : 'error' });
       if (result.success) {
         setReleaseOpen(false);
         setRevealedIds((prev) => {
@@ -452,7 +452,7 @@ export default function PayrollPage() {
     setSubmitting(true);
     try {
       const result = await deleteStaff(deletingEmployee.id);
-      showToast(result.message);
+      showToast(result.message, { type: result.success ? 'success' : 'error' });
       if (result.success) {
         setDeleteOpen(false);
         setDeletingEmployee(null);
@@ -470,7 +470,7 @@ export default function PayrollPage() {
     setSubmitting(true);
     try {
       const result = await clearPayrollRows([...selectedIds]);
-      showToast(result.message);
+      showToast(result.message, { type: result.success ? 'success' : 'error' });
       if (result.success) {
         setMassClearConfirmOpen(false);
         exitMassClearMode();
@@ -485,7 +485,7 @@ export default function PayrollPage() {
 
   const loadChargeDebts = async () => {
     const staffName = chargeDebtsStaffSelect;
-    if (!staffName) { showToast('Please select a staff member.'); return; }
+    if (!staffName) { showToast('Please select a staff member.', { type: 'error' }); return; }
     setChargeDebtsLoading(true);
     setChargingStaffName(staffName);
     try {
@@ -493,7 +493,7 @@ export default function PayrollPage() {
       setPendingChargeDebts(debts || []);
       setChargeDebtsStep(2);
     } catch (err) {
-      showToast(err?.message || 'Failed to load debts.');
+      showToast(err?.message || 'Failed to load debts.', { type: 'error' });
     } finally {
       setChargeDebtsLoading(false);
     }
@@ -504,7 +504,7 @@ export default function PayrollPage() {
     setSubmitting(true);
     try {
       const result = await chargeDebtsForStaff(chargingStaffName);
-      showToast(result.message);
+      showToast(result.message, { type: result.success ? 'success' : 'error' });
       if (result.success) {
         setChargeDebtsConfirmOpen(false);
         setChargeDebtsOpen(false);
@@ -530,11 +530,11 @@ export default function PayrollPage() {
 
   const handleChargeDebtPay = async () => {
     const amount = parseFloat(cdpAmount) || 0;
-    if (amount <= 0) { showToast('Please enter a valid amount.'); return; }
+    if (amount <= 0) { showToast('Please enter a valid amount.', { type: 'error' }); return; }
     setCdpSubmitting(true);
     try {
       const result = await payPautang(cdpOrderId, amount);
-      showToast(result.message);
+      showToast(result.message, { type: result.success ? 'success' : 'error' });
       if (result.success) {
         setChargeDebtPayOpen(false);
         if (chargingStaffName) await loadChargeDebts();
@@ -542,9 +542,9 @@ export default function PayrollPage() {
       }
     } catch (err) {
       if (err?.code === 'PGRST202') {
-        showToast('Pay RPC not set up. Run 003_pautang_rpc.sql in Supabase SQL Editor.');
+        showToast('Pay RPC not set up. Run 003_pautang_rpc.sql in Supabase SQL Editor.', { type: 'error' });
       } else {
-        showToast(err?.message || 'Payment failed.');
+        showToast(err?.message || 'Payment failed.', { type: 'error' });
       }
     } finally {
       setCdpSubmitting(false);
@@ -573,7 +573,7 @@ export default function PayrollPage() {
         return { staffId: emp.id, debts: debts || [], style: { top: rect.bottom + 6, left } };
       });
     } catch (err) {
-      showToast(err?.message || 'Failed to load debt breakdown.');
+      showToast(err?.message || 'Failed to load debt breakdown.', { type: 'error' });
       setDebtDropdown(null);
     }
   };
@@ -672,7 +672,7 @@ export default function PayrollPage() {
             disabled={!shiftOpen}
             title={shiftOpen ? '' : 'Open a shift first'}
             onClick={() => {
-              if (!shiftOpen) { showToast('Please open a shift first.'); return; }
+              if (!shiftOpen) { showToast('Please open a shift first.', { type: 'error' }); return; }
               setAdvanceForm({ staffId: '', amount: '' });
               setAdvanceOpen(true);
             }}
@@ -903,7 +903,7 @@ export default function PayrollPage() {
                           data-name={emp.name}
                           data-expected={emp.expectedSalary}
                           onClick={() => {
-                            if (!shiftOpen) { showToast('Please open a shift first.'); return; }
+                            if (!shiftOpen) { showToast('Please open a shift first.', { type: 'error' }); return; }
                             setReleasingEmployee(emp);
                             setReleaseOpen(true);
                           }}

@@ -1,7 +1,7 @@
 const DEFAULT_ICONS = {
   success: 'check_circle',
   error: 'cancel',
-  warning: 'warning',
+  warn: 'warning',
   info: 'info',
 };
 

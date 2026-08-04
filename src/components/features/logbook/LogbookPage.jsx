@@ -71,7 +71,7 @@ function LogbookPageContent() {
       setStaff(data.staff);
       setProducts(data.products);
     } catch (err) {
-      showToast(err?.message || 'Failed to load logbook.');
+      showToast(err?.message || 'Failed to load logbook.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -193,9 +193,9 @@ function LogbookPageContent() {
           deliveredQty: newStatus === 'Partial' ? qty : newStatus === 'Delivered' ? e.qty : 0,
         };
       }));
-      showToast(`Status updated to ${newStatus}`);
+      showToast(`Status updated to ${newStatus}`, { type: 'success' });
     } catch (err) {
-      showToast(err?.message || 'Update failed.');
+      showToast(err?.message || 'Update failed.', { type: 'error' });
     }
   }
 
@@ -207,7 +207,7 @@ function LogbookPageContent() {
       setEntries((prev) => prev.map((e) => (e.logId === tipEntry.logId ? { ...e, tipClaimed: result.tipClaimed } : e)));
       setTipEntry(null);
     } catch (err) {
-      showToast(err?.message || 'Update failed.');
+      showToast(err?.message || 'Update failed.', { type: 'error' });
     }
   }
 
@@ -220,7 +220,7 @@ function LogbookPageContent() {
         setEntries((prev) => prev.map((e) => (e.logId === en.logId ? { ...e, tipClaimed: result.tipClaimed } : e)));
       } catch { hasError = true; }
     }
-    showToast(hasError ? 'Some tips failed to update.' : `${claimAll.entries.length} tips marked as claimed!`);
+    showToast(hasError ? 'Some tips failed to update.' : `${claimAll.entries.length} tips marked as claimed!`, { type: 'success' });
     setClaimAll(null);
   }
 
@@ -233,19 +233,19 @@ function LogbookPageContent() {
   async function confirmPay() {
     if (!payEntry) return;
     const amount = parseFloat(payAmount) || 0;
-    if (amount <= 0) { showToast('Please enter a valid amount.'); return; }
+    if (amount <= 0) { showToast('Please enter a valid amount.', { type: 'error' }); return; }
     setPaySubmitting(true);
     try {
       const result = await payPautang([payEntry.orderId], amount, payMethod);
       if (result?.success === false) throw new Error(result.message);
-      showToast(result?.message || 'Payment recorded!');
+      showToast(result?.message || 'Payment recorded!', { type: 'success' });
       const newBalance = Math.max(0, payEntry.paymentBalance - amount);
       setEntries((prev) => prev.map((e) => (e.orderId === payEntry.orderId
         ? { ...e, paymentBalance: newBalance, paymentStatus: newBalance <= 0 ? 'Paid' : 'Partial' }
         : e)));
       setPayEntry(null);
     } catch (err) {
-      showToast(err?.message || 'Payment failed.');
+      showToast(err?.message || 'Payment failed.', { type: 'error' });
     } finally {
       setPaySubmitting(false);
     }
@@ -258,11 +258,11 @@ function LogbookPageContent() {
       const result = await voidLogbookOrder(voidTarget.logId, voidTarget.orderId);
       if (result?.success === false) throw new Error(result.message);
       setEntries((prev) => prev.filter((e) => e.logId !== voidTarget.logId));
-      showToast(result.message);
+      showToast(result.message, { type: 'success' });
       setVoidTarget(null);
       if (massSelectMode) exitMassSelect();
     } catch (err) {
-      showToast(err?.message || 'Void failed.');
+      showToast(err?.message || 'Void failed.', { type: 'error' });
     }
   }
 
@@ -324,7 +324,7 @@ function LogbookPageContent() {
     }
     if (newRows.length) setEntries((prev) => [...prev, ...newRows]);
 
-    showToast(hasError ? 'Some updates failed.' : `${toMove.length === 1 ? 'Order' : `${toMove.length} orders`} reassigned to ${newPerson || 'No point person'}!`);
+    showToast(hasError ? 'Some updates failed.' : `${toMove.length === 1 ? 'Order' : `${toMove.length} orders`} reassigned to ${newPerson || 'No point person'}!`, { type: 'success' });
     setReassign(null);
     if (massSelectMode) exitMassSelect();
   }
@@ -342,7 +342,7 @@ function LogbookPageContent() {
           : e)));
       } catch { hasError = true; }
     }
-    showToast(hasError ? 'Some updates failed.' : `${selectedLogIds.size} orders marked delivered!`);
+    showToast(hasError ? 'Some updates failed.' : `${selectedLogIds.size} orders marked delivered!`, { type: 'success' });
     setMassDeliverOpen(false);
     exitMassSelect();
   }
@@ -606,7 +606,7 @@ function LogbookPageContent() {
               </div>
               <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                 <button type="button" className="btn-cancel-delete" onClick={() => setHideTarget(null)}>Cancel</button>
-                <button type="button" className="btn-primary" style={{ flex: 1 }} onClick={() => { toggleHiddenColumn(hideTarget.key); showToast(`${hideTarget.label} column hidden.`); setHideTarget(null); }}>
+                <button type="button" className="btn-primary" style={{ flex: 1 }} onClick={() => { toggleHiddenColumn(hideTarget.key); showToast(`${hideTarget.label} column hidden.`, { type: 'success' }); setHideTarget(null); }}>
                   <span className="material-icons-outlined" style={{ fontSize: 16, verticalAlign: 'middle' }}>visibility_off</span> Hide Column
                 </button>
               </div>

@@ -187,7 +187,7 @@ export default function PautangPage() {
 
   const unhideAll = useCallback(() => {
     saveHidden([]);
-    showToast('All hidden rows are now visible.');
+    showToast('All hidden rows are now visible.', { type: 'success' });
   }, [saveHidden, showToast]);
 
   function handleDateTab(val) {
@@ -201,7 +201,7 @@ export default function PautangPage() {
 
   function applyCustomDates() {
     if (!customFrom || !customTo) {
-      showToast('Please select both dates.');
+      showToast('Please select both dates.', { type: 'error' });
       return;
     }
     setActiveDate('custom');
@@ -220,7 +220,7 @@ export default function PautangPage() {
 
   function handlePayClick(orderIds, debt, customer, product, hasBreakdown, credit) {
     if (!shiftOpen) {
-      showToast('Please open a shift first.');
+      showToast('Please open a shift first.', { type: 'error' });
       return;
     }
     if (hasBreakdown && credit) {
@@ -234,21 +234,21 @@ export default function PautangPage() {
   async function confirmPayment() {
     const amount = parseFloat(payAmount) || 0;
     if (amount <= 0) {
-      showToast('Please enter a valid amount.');
+      showToast('Please enter a valid amount.', { type: 'error' });
       return;
     }
     setPaySubmitting(true);
     try {
       const result = await payPautang(payingOrderIds, amount, payMethod);
       if (result?.success === false) throw new Error(result.message || 'Payment failed.');
-      showToast(result?.message || 'Payment recorded!');
+      showToast(result?.message || 'Payment recorded!', { type: 'success' });
       setPayModalOpen(false);
       await reload();
     } catch (err) {
       if (err?.code === 'PGRST202') {
-        showToast('Payment function not set up — run 003_pautang_rpc.sql in Supabase SQL Editor.');
+        showToast('Payment function not set up — run 003_pautang_rpc.sql in Supabase SQL Editor.', { type: 'error' });
       } else {
-        showToast(err?.message || 'Payment failed.');
+        showToast(err?.message || 'Payment failed.', { type: 'error' });
       }
     } finally {
       setPaySubmitting(false);
@@ -269,11 +269,11 @@ export default function PautangPage() {
     try {
       const result = await updatePautangPointPerson(orderIds, newPP);
       if (result?.success === false) throw new Error(result.message || 'Update failed.');
-      showToast(result?.message || 'Point person updated.');
+      showToast(result?.message || 'Point person updated.', { type: 'success' });
       setPpPopover(null);
       await reload();
     } catch (err) {
-      showToast(err?.message || 'Update failed.');
+      showToast(err?.message || 'Update failed.', { type: 'error' });
     }
   }
 

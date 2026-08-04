@@ -99,7 +99,7 @@ function POSPageContent() {
     } catch (err) {
       console.error('POS init error', err);
       setInitError('Failed to load POS data: ' + (err?.message || String(err)));
-      showToast('Failed to load POS data');
+      showToast('Failed to load POS data', { type: 'error' });
     } finally {
       setLoadingInit(false);
     }
@@ -274,7 +274,7 @@ function POSPageContent() {
       customerName = newCustomerName.trim();
       location = newCustomerLocation.trim();
       if (!customerName) {
-        showToast('Please enter a customer name.', { icon: 'error', highlightSelector: '#pdpCustomerSearch' });
+        showToast('Please enter a customer name.', { icon: 'error', highlightSelector: '#pdpCustomerSearch', type: 'error' });
         return;
       }
       isNewCustomer = true;
@@ -282,18 +282,18 @@ function POSPageContent() {
       customerName = chosenCustomer.name;
       location = chosenCustomer.location || '';
     } else {
-      showToast('Please select a customer.', { icon: 'error', highlightSelector: '#pdpCustomerSearch' });
+      showToast('Please select a customer.', { icon: 'error', highlightSelector: '#pdpCustomerSearch', type: 'error' });
       return;
     }
 
     if (quantity < 1) {
-      showToast('Please set a quantity.', { icon: 'error', highlightSelector: '#pdpQty' });
+      showToast('Please set a quantity.', { icon: 'error', highlightSelector: '#pdpQty', type: 'error' });
       return;
     }
 
     const qty = Math.max(1, quantity);
     if (selectedProduct.name === '5 Gallon' && !slimPoly) {
-      showToast('Please select Slim or Poly.', { icon: 'error', highlightSelector: '#pdpSlimPolyField' });
+      showToast('Please select Slim or Poly.', { icon: 'error', highlightSelector: '#pdpSlimPolyField', type: 'error' });
       return;
     }
 
@@ -316,17 +316,17 @@ function POSPageContent() {
     });
 
     closePanel();
-    showToast(`${selectedProduct.name} added to cart!`, { icon: 'check_circle' });
+    showToast(`${selectedProduct.name} added to cart!`, { icon: 'check_circle', type: 'success' });
   }
 
   function addBorrowToCart() {
     if (!selectedBorrow) return;
     if (!chosenCustomer?.name) {
-      showToast('Please select a customer.', { icon: 'error', highlightSelector: '#bdpCustomerSearch' });
+      showToast('Please select a customer.', { icon: 'error', highlightSelector: '#bdpCustomerSearch', type: 'error' });
       return;
     }
     if (chosenCustomer.isPickup) {
-      showToast('Cannot record a borrow for Pickup Customer.', { icon: 'error' });
+      showToast('Cannot record a borrow for Pickup Customer.', { icon: 'error', type: 'error' });
       return;
     }
 
@@ -351,7 +351,7 @@ function POSPageContent() {
     });
 
     closePanel();
-    showToast(`${selectedBorrow.name} borrow recorded!`, { icon: 'inventory_2' });
+    showToast(`${selectedBorrow.name} borrow recorded!`, { icon: 'inventory_2', type: 'success' });
   }
 
   function updateCartQty(index, delta) {
@@ -425,12 +425,12 @@ function POSPageContent() {
     if (!item) return;
 
     if (quantity < 1) {
-      showToast('Please set a quantity.', { icon: 'error', highlightSelector: '#editCartQty' });
+      showToast('Please set a quantity.', { icon: 'error', highlightSelector: '#editCartQty', type: 'error' });
       return;
     }
 
     if (selectedProduct?.name === '5 Gallon' && !slimPoly) {
-      showToast('Please select Slim or Poly.', { icon: 'error', highlightSelector: '#editCartSlimPolyField' });
+      showToast('Please select Slim or Poly.', { icon: 'error', highlightSelector: '#editCartSlimPolyField', type: 'error' });
       return;
     }
 
@@ -444,7 +444,7 @@ function POSPageContent() {
     setCart((current) => current.map((row, idx) => idx !== editCartIndex ? row : { ...row, price: activePrice, qty, total, amountPaid: paid, status, customer: customerName, location, pointPerson, slimPoly, tip, notes, paymentMethod }));
 
     closeEditCartModal();
-    showToast('Cart item updated.', { icon: 'check_circle' });
+    showToast('Cart item updated.', { icon: 'check_circle', type: 'success' });
   }
 
   function removeCartItem(index) {
@@ -466,12 +466,12 @@ function POSPageContent() {
       clientRequestIdRef.current = null;
       setShowCheckout(false);
       setCart([]);
-      showToast('Sale completed!', { icon: 'check_circle' });
+      showToast('Sale completed!', { icon: 'check_circle', type: 'success' });
       flushSaleQueue().then(() => setQueueCount(getSaleQueue().length)).catch(() => {});
     } catch (err) {
       console.error('checkout error', err);
       if (err?.code === 'PGRST202') {
-        showToast('Checkout is not set up yet. Run 001_complete_sale_batch.sql in Supabase SQL Editor.', { icon: 'error' });
+        showToast('Checkout is not set up yet. Run 001_complete_sale_batch.sql in Supabase SQL Editor.', { icon: 'error', type: 'error' });
         return;
       }
       enqueueSale(batchPayload);
@@ -479,7 +479,7 @@ function POSPageContent() {
       clientRequestIdRef.current = null;
       setShowCheckout(false);
       setCart([]);
-      showToast('Sale queued — will sync automatically.', { icon: 'schedule' });
+      showToast('Sale queued — will sync automatically.', { icon: 'schedule', type: 'info' });
     } finally {
       setCheckoutLoading(false);
     }

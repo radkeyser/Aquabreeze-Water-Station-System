@@ -33,7 +33,7 @@ export default function ReconciliationTab() {
       const bankAccs = d.accounts.filter((a) => a.type === 'Bank');
       setBanks(bankAccs);
       setSelectedBank((prev) => prev || bankAccs[0]?.name || '');
-    }).catch(() => showToast('Failed to load accounts.'));
+    }).catch(() => showToast('Failed to load accounts.', { type: 'error' }));
   }, []);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function ReconciliationTab() {
       setBankEnding(String(ex?.bankEndingBalance || 0));
       setDepositTransit(String(ex?.depositInTransit || 0));
       setBankNotes(ex?.bankNotes || '');
-    } catch { showToast('Failed to load reconciliation.'); }
+    } catch { showToast('Failed to load reconciliation.', { type: 'error' }); }
     setLoading(false);
   }
 
@@ -81,7 +81,7 @@ export default function ReconciliationTab() {
   const moIdx = parseInt(parts[1], 10) - 1;
 
   function handleSaveClick() {
-    if (!balanced) { showToast('Book and Bank totals must match before saving.'); return; }
+    if (!balanced) { showToast('Book and Bank totals must match before saving.', { type: 'error' }); return; }
     setConfirmOpen(true);
   }
 
@@ -92,9 +92,9 @@ export default function ReconciliationTab() {
         month, selectedBank, bookEnding: bk, interestIncome: intNum, unrecordedDeposit: unrNum,
         correction: corNum, bookNotes, bankEndingBalance: bkEndNum, depositInTransit: depNum, bankNotes,
       });
-      showToast(res.message);
+      showToast(res.message, { type: 'success' });
       if (res.success) { setConfirmOpen(false); await loadRecon(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setSubmitting(false);
   }
 

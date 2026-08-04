@@ -28,7 +28,7 @@ export default function CashTab() {
 
   const load = async () => {
     setLoading(true);
-    try { setData(await getCashManagementData()); } catch { showToast('Failed to load.'); }
+    try { setData(await getCashManagementData()); } catch { showToast('Failed to load.', { type: 'error' }); }
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -55,26 +55,26 @@ export default function CashTab() {
     const isOther = depositMode === 'other';
     const bank = isOther ? depOtherBank.trim() : depBank;
     const amount = parseFloat(depAmount) || 0;
-    if (!bank) { showToast(isOther ? 'Please enter a bank name.' : 'Please select a bank.'); return; }
-    if (amount <= 0) { showToast('Please enter an amount.'); return; }
+    if (!bank) { showToast(isOther ? 'Please enter a bank name.' : 'Please select a bank.', { type: 'error' }); return; }
+    if (amount <= 0) { showToast('Please enter an amount.', { type: 'error' }); return; }
     setDepSubmitting(true);
     try {
       const res = await cashDeposit({ bankAccount: bank, amount, accountNumber: depAccNum.trim(), accountName: depAccName.trim(), reference: depRef.trim(), description: depDesc.trim() });
-      showToast(res.message);
+      showToast(res.message, { type: 'success' });
       if (res.success) { setDepositOpen(false); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setDepSubmitting(false);
   }
 
   async function handleTransfer() {
     const amount = parseFloat(transferAmount) || 0;
-    if (amount <= 0) { showToast('Please enter an amount.'); return; }
+    if (amount <= 0) { showToast('Please enter an amount.', { type: 'error' }); return; }
     setTransferSubmitting(true);
     try {
       const res = await cashTransfer({ from: 'Cash', to: transferTo, amount, description: transferDesc.trim() });
-      showToast(res.message);
+      showToast(res.message, { type: 'success' });
       if (res.success) { setTransferOpen(false); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setTransferSubmitting(false);
   }
 

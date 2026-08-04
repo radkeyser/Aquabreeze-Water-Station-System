@@ -127,7 +127,7 @@ export default function CustomersPage() {
       setShiftOpen(!!shift?.isOpen);
       setDefaultPrices(prices);
     } catch (err) {
-      showToast(err?.message || 'Failed to load customers.');
+      showToast(err?.message || 'Failed to load customers.', { type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -209,10 +209,10 @@ export default function CustomersPage() {
     try {
       const result = await updateCustomer(customer.id, customerPayload({ ...customer, pointPerson: newPP }));
       if (result?.success === false) throw new Error(result.message);
-      showToast('Point person updated!');
+      showToast('Point person updated!', { type: 'success' });
       await reload();
     } catch (err) {
-      showToast(err?.message || 'Update failed.');
+      showToast(err?.message || 'Update failed.', { type: 'error' });
       if (selectEl) selectEl.value = prev;
     } finally {
       setInlineSaving(null);
@@ -253,7 +253,7 @@ export default function CustomersPage() {
 
   async function saveAdd(skipConfirm = false) {
     const name = String(form.name || '').trim();
-    if (!name) { showToast('Please enter a customer name.'); return; }
+    if (!name) { showToast('Please enter a customer name.', { type: 'error' }); return; }
     const payload = {
       name,
       location: String(form.location || '').trim(),
@@ -272,14 +272,14 @@ export default function CustomersPage() {
     try {
       const result = await addCustomer(payload);
       if (result?.success === false) throw new Error(result.message);
-      showToast(result?.message || 'Customer added!');
+      showToast(result?.message || 'Customer added!', { type: 'success' });
       setAddOpen(false);
       setOverrideConfirmOpen(false);
       setPendingAdd(null);
       await reload();
     } catch (err) {
-      if (err?.code === 'PGRST202') showToast('Run 004_customers_rpc.sql in Supabase SQL Editor.');
-      else showToast(err?.message || 'Failed to add customer.');
+      if (err?.code === 'PGRST202') showToast('Run 004_customers_rpc.sql in Supabase SQL Editor.', { type: 'error' });
+      else showToast(err?.message || 'Failed to add customer.', { type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -288,7 +288,7 @@ export default function CustomersPage() {
   async function saveEdit() {
     if (!activeCustomer) return;
     const name = String(form.name || '').trim();
-    if (!name) { showToast('Please enter a customer name.'); return; }
+    if (!name) { showToast('Please enter a customer name.', { type: 'error' }); return; }
     setSubmitting(true);
     try {
       const result = await updateCustomer(activeCustomer.id, {
@@ -301,11 +301,11 @@ export default function CustomersPage() {
         override1000: form.overrideOn ? Number(form.override1000) || 0 : 0,
       });
       if (result?.success === false) throw new Error(result.message);
-      showToast(result?.message || 'Customer updated!');
+      showToast(result?.message || 'Customer updated!', { type: 'success' });
       setEditOpen(false);
       await reload();
     } catch (err) {
-      showToast(err?.message || 'Update failed.');
+      showToast(err?.message || 'Update failed.', { type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -317,11 +317,11 @@ export default function CustomersPage() {
     try {
       const result = await deleteCustomer(activeCustomer.id);
       if (result?.success === false) throw new Error(result.message);
-      showToast(result?.message || 'Customer deleted.');
+      showToast(result?.message || 'Customer deleted.', { type: 'success' });
       setDeleteOpen(false);
       await reload();
     } catch (err) {
-      showToast(err?.message || 'Delete failed.');
+      showToast(err?.message || 'Delete failed.', { type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -341,7 +341,7 @@ export default function CustomersPage() {
     }
     setSubmitting(false);
     setMassConfirmOpen(false);
-    showToast(hasError ? 'Some updates failed.' : 'Point persons updated!');
+    showToast(hasError ? 'Some updates failed.' : 'Point persons updated!', { type: 'success' });
     exitMassEdit();
     await reload();
   }
@@ -355,7 +355,7 @@ export default function CustomersPage() {
       setOrders(data);
     } catch {
       setOrders([]);
-      showToast('Failed to load orders.');
+      showToast('Failed to load orders.', { type: 'error' });
     } finally {
       setOrdersLoading(false);
     }
@@ -371,7 +371,7 @@ export default function CustomersPage() {
       setBorrowData(data);
     } catch {
       setBorrowData(null);
-      showToast('Failed to load borrow history.');
+      showToast('Failed to load borrow history.', { type: 'error' });
     } finally {
       setBorrowLoading(false);
     }
@@ -386,7 +386,7 @@ export default function CustomersPage() {
   async function confirmReturn() {
     if (!activeCustomer) return;
     if (returnGallon <= 0 && returnDispenser <= 0) {
-      showToast('Please enter a return quantity of at least 1.');
+      showToast('Please enter a return quantity of at least 1.', { type: 'error' });
       return;
     }
     setSubmitting(true);
@@ -398,11 +398,11 @@ export default function CustomersPage() {
         returnDispenser,
       });
       if (result?.success === false) throw new Error(result.message);
-      showToast(result?.message || 'Return recorded!');
+      showToast(result?.message || 'Return recorded!', { type: 'success' });
       setBorrowOpen(false);
       await reload();
     } catch (err) {
-      showToast(err?.message || 'Return failed.');
+      showToast(err?.message || 'Return failed.', { type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -419,18 +419,18 @@ export default function CustomersPage() {
 
   async function confirmPay() {
     const amount = parseFloat(payAmount) || 0;
-    if (amount <= 0) { showToast('Please enter a valid amount.'); return; }
+    if (amount <= 0) { showToast('Please enter a valid amount.', { type: 'error' }); return; }
     setSubmitting(true);
     try {
       const result = await payPautang([payOrderId], amount, payMethod);
       if (result?.success === false) throw new Error(result.message);
-      showToast(result?.message || 'Payment recorded!');
+      showToast(result?.message || 'Payment recorded!', { type: 'success' });
       setPayOpen(false);
       if (activeCustomer) await openOrdersModal(activeCustomer);
       await reload();
     } catch (err) {
-      if (err?.code === 'PGRST202') showToast('Run 003_pautang_rpc.sql in Supabase SQL Editor.');
-      else showToast(err?.message || 'Payment failed.');
+      if (err?.code === 'PGRST202') showToast('Run 003_pautang_rpc.sql in Supabase SQL Editor.', { type: 'error' });
+      else showToast(err?.message || 'Payment failed.', { type: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -448,11 +448,11 @@ export default function CustomersPage() {
         override1000: Number(form.override1000) || 0,
       });
       if (result?.success === false) throw new Error(result.message);
-      showToast(result?.message || 'Override prices saved.');
+      showToast(result?.message || 'Override prices saved.', { type: 'success' });
       setViewOverrideOpen(false);
       await reload();
     } catch (err) {
-      showToast(err?.message || 'Save failed.');
+      showToast(err?.message || 'Save failed.', { type: 'error' });
     } finally {
       setSubmitting(false);
     }

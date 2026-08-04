@@ -28,10 +28,10 @@ export default function StartShiftModal() {
         close();
         if (pendingTarget) { pendingTarget(); setPendingTarget(null); }
       } else {
-        showToast(result.message);
+        showToast(result.message, { type: 'error' });
       }
     } catch (err) {
-      showToast('Error: ' + (err?.message || 'Unknown'));
+      showToast('Error: ' + (err?.message || 'Unknown'), { type: 'error' });
     } finally {
       setSubmitting(false);
     }

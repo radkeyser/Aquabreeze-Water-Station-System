@@ -41,7 +41,7 @@ export default function BankTab() {
 
   const load = async () => {
     setLoading(true);
-    try { setData(await getCashManagementData()); } catch { showToast('Failed to load.'); }
+    try { setData(await getCashManagementData()); } catch { showToast('Failed to load.', { type: 'error' }); }
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -53,13 +53,13 @@ export default function BankTab() {
   const txs = data.transactions.filter((t) => ['Deposit', 'Withdraw', 'Payment', 'Add'].includes(t.type));
 
   async function handleAddBank() {
-    if (!addName.trim()) { showToast('Please enter a bank name.'); return; }
+    if (!addName.trim()) { showToast('Please enter a bank name.', { type: 'error' }); return; }
     setAddSubmitting(true);
     try {
       const res = await addBankAccount({ name: addName.trim(), accountNumber: addAccNum.trim(), accountName: addAccName.trim() });
       showToast(res.message);
       if (res.success) { setAddOpen(false); setAddName(''); setAddAccNum(''); setAddAccName(''); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setAddSubmitting(false);
   }
 
@@ -69,7 +69,7 @@ export default function BankTab() {
       const res = await deleteBankAccount(deleteTarget);
       showToast(res.message);
       if (res.success) { setDeleteTarget(null); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setDeleting(false);
   }
 
@@ -92,7 +92,7 @@ export default function BankTab() {
     if (!categories.includes(cat)) setCategories((prev) => [...prev, cat]);
     setCategory(cat);
     setNewCatMode(false); setNewCatInput('');
-    showToast(`Category "${cat}" added!`);
+    showToast(`Category "${cat}" added!`, { type: 'success' });
     try { await addPaymentCategory(cat); } catch { /* ignore */ }
   }
 
@@ -102,25 +102,25 @@ export default function BankTab() {
     try {
       let res;
       if (modal === 'deposit') {
-        if (amt <= 0) { showToast('Please enter an amount.'); setSubmitting(false); return; }
+        if (amt <= 0) { showToast('Please enter an amount.', { type: 'error' }); setSubmitting(false); return; }
         res = await cashDeposit({ bankAccount: activeBank, amount: amt, reference, description });
       } else if (modal === 'withdraw') {
-        if (amt <= 0) { showToast('Please enter an amount.'); setSubmitting(false); return; }
+        if (amt <= 0) { showToast('Please enter an amount.', { type: 'error' }); setSubmitting(false); return; }
         res = await bankWithdraw({ bankAccount: activeBank, amount: amt, reference, description });
       } else if (modal === 'payment') {
-        if (!category) { showToast('Please select a category.'); setSubmitting(false); return; }
-        if (amt <= 0) { showToast('Please enter an amount.'); setSubmitting(false); return; }
-        if (!destBank.trim()) { showToast('Please enter a destination bank name.'); setSubmitting(false); return; }
-        if (!destAccName.trim()) { showToast('Please enter a destination account name.'); setSubmitting(false); return; }
+        if (!category) { showToast('Please select a category.', { type: 'error' }); setSubmitting(false); return; }
+        if (amt <= 0) { showToast('Please enter an amount.', { type: 'error' }); setSubmitting(false); return; }
+        if (!destBank.trim()) { showToast('Please enter a destination bank name.', { type: 'error' }); setSubmitting(false); return; }
+        if (!destAccName.trim()) { showToast('Please enter a destination account name.', { type: 'error' }); setSubmitting(false); return; }
         res = await bankPayment({ bankAccount: activeBank, category, amount: amt, transferFee: parseFloat(fee) || 0, reference, description, destBank: destBank.trim(), destAccNum: destAccNum.trim(), destAccName: destAccName.trim() });
       } else if (modal === 'addfunds') {
-        if (!source.trim()) { showToast('Please enter a source.'); setSubmitting(false); return; }
-        if (amt <= 0) { showToast('Please enter an amount.'); setSubmitting(false); return; }
+        if (!source.trim()) { showToast('Please enter a source.', { type: 'error' }); setSubmitting(false); return; }
+        if (amt <= 0) { showToast('Please enter an amount.', { type: 'error' }); setSubmitting(false); return; }
         res = await bankAddFunds({ bankAccount: activeBank, source: source.trim(), amount: amt, reference, description });
       }
-      showToast(res.message);
+      showToast(res.message, { type: 'success' });
       if (res.success) { closeModal(); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setSubmitting(false);
   }
 

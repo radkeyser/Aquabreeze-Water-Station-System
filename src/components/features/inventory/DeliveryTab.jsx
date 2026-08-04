@@ -41,7 +41,7 @@ export default function DeliveryTab() {
       setRecords(hist.records);
       setSuppliers(hist.suppliers);
       setShiftOpen(!!shiftId);
-    } catch { showToast('Failed to load deliveries.'); }
+    } catch { showToast('Failed to load deliveries.', { type: 'error' }); }
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -52,7 +52,7 @@ export default function DeliveryTab() {
     setStep('form');
   }
   function openForm() {
-    if (!shiftOpen) { showToast('Please open a shift first.'); return; }
+    if (!shiftOpen) { showToast('Please open a shift first.', { type: 'error' }); return; }
     resetForm();
     setFormOpen(true);
   }
@@ -98,11 +98,11 @@ export default function DeliveryTab() {
       const payload = { date, supplier, product, bags: bagsNum, piecePerBag: ppb, discount: discountNum, additional: additionalNum, mop, notes, totalCost, unitPrice };
       const res = await saveDelivery(payload);
       if (res.success) {
-        showToast('Delivery recorded!');
+        showToast('Delivery recorded!', { type: 'success' });
         setFormOpen(false);
         await load();
-      } else showToast('Error: ' + res.message);
-    } catch (err) { showToast('Error: ' + (err?.message || 'Unknown')); }
+      } else showToast('Error: ' + res.message, { type: 'error' });
+    } catch (err) { showToast('Error: ' + (err?.message || 'Unknown'), { type: 'error' }); }
     setSubmitting(false);
   }
 
@@ -258,9 +258,9 @@ export default function DeliveryTab() {
                     <button
                       type="button" className="inv-btn-primary" style={{ width: '100%', marginTop: 4 }}
                       onClick={() => {
-                        if (!date) { showToast('Please enter a date.'); return; }
-                        if (!bagsNum) { showToast('Please enter quantity.'); return; }
-                        if (!mop) { showToast('Please select MOP.'); return; }
+                        if (!date) { showToast('Please enter a date.', { type: 'error' }); return; }
+                        if (!bagsNum) { showToast('Please enter quantity.', { type: 'error' }); return; }
+                        if (!mop) { showToast('Please select MOP.', { type: 'error' }); return; }
                         setStep('confirm');
                       }}
                     >

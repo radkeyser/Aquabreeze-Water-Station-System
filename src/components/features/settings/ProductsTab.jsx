@@ -11,9 +11,9 @@ function OptPeso({ value }) {
 
 function handleApiError(err, showToast) {
   if (err?.code === 'PGRST202') {
-    showToast('Settings RPC not set up. Run 006_settings_rpc.sql in Supabase SQL Editor.');
+    showToast('Settings RPC not set up. Run 006_settings_rpc.sql in Supabase SQL Editor.', { icon: 'error', type: 'error' });
   } else {
-    showToast(err?.message || 'Something went wrong.');
+    showToast(err?.message || 'Something went wrong.', { icon: 'error', type: 'error' });
   }
 }
 
@@ -69,7 +69,7 @@ export default function ProductsTab({ showToast }) {
   async function handleSave() {
     const name = form.name.trim();
     if (!name) {
-      showToast('Please enter a product name.');
+      showToast('Please enter a product name.', { icon: 'error', type: 'error' });
       return;
     }
 
@@ -86,7 +86,7 @@ export default function ProductsTab({ showToast }) {
       const result = editingId
         ? await updateProduct(editingId, payload)
         : await addProduct(payload);
-      showToast(result.message);
+      showToast(result.message || (editingId ? 'Product updated!' : 'Product added!'), { type: 'success' });
       if (result.success) {
         setModalOpen(false);
         await load();
@@ -103,7 +103,7 @@ export default function ProductsTab({ showToast }) {
     setSubmitting(true);
     try {
       const result = await deleteProduct(deleteTarget.id);
-      showToast(result.message);
+      showToast(result.message || 'Product deleted!', { type: 'success' });
       if (result.success) {
         setDeleteTarget(null);
         await load();

@@ -19,7 +19,7 @@ export default function OthersTab({ showToast }) {
       setRoles(data.roles || []);
       setExpenses(data.expenses || []);
     } catch (err) {
-      showToast(err?.message || 'Failed to load settings.');
+      showToast(err?.message || 'Failed to load settings.', {type: 'error'});
     } finally {
       setLoading(false);
     }
@@ -62,12 +62,12 @@ export default function OthersTab({ showToast }) {
         expenses: expenses.map((item) => item.trim()).filter(Boolean),
       };
       const result = await saveConfigData(payload);
-      showToast(result.message || 'Config saved!');
+      showToast(result.message || 'Config saved!', { type: 'success' });
       if (result.success) {
         await load();
       }
     } catch (err) {
-      showToast(err?.message || 'Failed to save settings.');
+      showToast(err?.message || 'Failed to save settings.', { type: 'error' });
     } finally {
       setSaving(false);
     }

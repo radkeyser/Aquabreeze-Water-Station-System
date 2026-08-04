@@ -23,7 +23,7 @@ export default function PettyTab() {
 
   const load = async () => {
     setLoading(true);
-    try { setData(await getCashManagementData()); } catch { showToast('Failed to load.'); }
+    try { setData(await getCashManagementData()); } catch { showToast('Failed to load.', { type: 'error' }); }
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -36,22 +36,22 @@ export default function PettyTab() {
   const txs = data.transactions.filter((t) => pettyAccs.some((a) => t.from === a.name || t.to === a.name));
 
   async function handleAdd() {
-    if (!addName.trim()) { showToast('Please enter an account name.'); return; }
+    if (!addName.trim()) { showToast('Please enter an account name.', { type: 'error' }); return; }
     setAddSubmitting(true);
     try {
       const res = await addPettyCashAccount({ name: addName.trim() });
-      showToast(res.message);
+      showToast(res.message, { type: 'success' });
       if (res.success) { setAddOpen(false); setAddName(''); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setAddSubmitting(false);
   }
 
   async function handleDelete() {
     try {
       const res = await deletePettyCashAccount(deleteTarget);
-      showToast(res.message);
+      showToast(res.message, { type: 'success' });
       if (res.success) { setDeleteTarget(null); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
   }
 
   function openModal(acctName, action) {
@@ -61,17 +61,17 @@ export default function PettyTab() {
 
   async function handleConfirm() {
     const amt = parseFloat(amount) || 0;
-    if (amt <= 0) { showToast('Please enter an amount.'); return; }
-    if (modal === 'cashout' && !description.trim()) { showToast('Please enter a description.'); return; }
+    if (amt <= 0) { showToast('Please enter an amount.', { type: 'error' }); return; }
+    if (modal === 'cashout' && !description.trim()) { showToast('Please enter a description.', { type: 'error' }); return; }
     setSubmitting(true);
     try {
       let res;
       if (modal === 'add') res = await cashTransfer({ from: 'Cash', to: activeAcct, amount: amt, description: description.trim() || `Add to ${activeAcct}` });
       else if (modal === 'return') res = await cashTransfer({ from: activeAcct, to: 'Cash', amount: amt, description: description.trim() || 'Return to Cash' });
       else if (modal === 'cashout') res = await pettyCashOut({ fromAccount: activeAcct, amount: amt, description: description.trim() });
-      showToast(res.message);
+      showToast(res.message, { type: 'success' });
       if (res.success) { closeModal(); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setSubmitting(false);
   }
 

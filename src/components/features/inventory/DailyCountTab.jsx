@@ -67,7 +67,7 @@ export default function DailyCountTab() {
   }
 
   function handleReview() {
-    if (!allFilled()) { showToast('Please fill in all Actual Ending fields.'); return; }
+    if (!allFilled()) { showToast('Please fill in all Actual Ending fields.', { type: 'error' }); return; }
     setReviewing(true);
   }
 
@@ -86,7 +86,7 @@ export default function DailyCountTab() {
     try {
       const res = await saveDailyInventory(payload);
       if (res.success) {
-        showToast('Inventory saved!');
+        showToast('Inventory saved!', { type: 'success' });
         setValues({});
         setReviewing(false);
         setLoading(true);
@@ -94,10 +94,10 @@ export default function DailyCountTab() {
         setFormData(fresh);
         setLoading(false);
       } else {
-        showToast('Error: ' + res.message);
+        showToast('Error: ' + res.message, { type: 'error' });
       }
     } catch (err) {
-      showToast('Error: ' + (err?.message || 'Unknown'));
+      showToast('Error: ' + (err?.message || 'Unknown'), { type: 'error' });
     } finally {
       setSubmitting(false);
     }

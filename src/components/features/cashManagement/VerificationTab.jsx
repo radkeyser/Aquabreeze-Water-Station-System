@@ -27,7 +27,7 @@ export default function VerificationTab() {
 
   const load = async () => {
     setLoading(true);
-    try { setData(await getShiftVerificationData()); } catch { showToast('Failed to load.'); }
+    try { setData(await getShiftVerificationData()); } catch { showToast('Failed to load.', { type: 'error' }); }
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -67,9 +67,9 @@ export default function VerificationTab() {
     setSubmitting(true);
     try {
       const res = await verifyShiftCash({ shiftId: verifyTarget.shiftId, verifiedCount: total, remarks: remarks.trim() });
-      showToast(res.message);
+      showToast(res.message, { type: 'success' });
       if (res.success) { closeVerify(); await load(); }
-    } catch (err) { showToast(err?.message || 'Error'); }
+    } catch (err) { showToast(err?.message || 'Error', { type: 'error' }); }
     setSubmitting(false);
   }
 
