@@ -28,7 +28,7 @@ export async function getProducts() {
   const { data, error } = await supabase
     .from('products')
     .select('product_id,name,price,type,commission_rate,pickup_price')
-    .order('name', { ascending: true });
+    .order('product_id', { ascending: true });
 
   if (error) throw error;
   return (data || []).map(mapProduct);
