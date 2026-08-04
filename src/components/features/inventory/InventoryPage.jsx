@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import RequireShift from '../../../components/features/shift/RequireShift.jsx';
 import DashboardTab from './DashboardTab.jsx';
 import DailyCountTab from './DailyCountTab.jsx';
@@ -18,7 +19,8 @@ const TABS = [
 ];
 
 function InventoryPageContent() {
-  const [tab, setTab] = useState('dashboard');
+  const location = useLocation();
+  const [tab, setTab] = useState(location.state?.tab || 'dashboard');
 
   return (
     <div className="inv-wrapper">

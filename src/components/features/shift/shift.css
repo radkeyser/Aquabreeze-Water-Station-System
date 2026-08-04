@@ -123,6 +123,20 @@
   font-weight: 600;
   color: var(--destructive);
 }
+.shift-blocked-item-link {
+  width: 100%;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.shift-blocked-item-link:hover {
+  background: hsla(0,65%,55%,0.12);
+  border-color: hsla(0,65%,55%,0.35);
+}
+.shift-blocked-item-arrow {
+  margin-left: auto;
+  font-size: 18px;
+}
 .shift-blocked-item .material-icons-outlined { font-size: 18px; }
 .shift-blocked-item-done {
   background: hsla(150,45%,45%,0.08);

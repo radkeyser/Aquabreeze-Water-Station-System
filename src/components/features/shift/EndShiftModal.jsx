@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { endShift, checkShiftCloseRequirements } from '../../../api/shift.js';
 import { getCashDrawerData } from '../../../api/cashDrawer.js';
 import { formatPeso } from '../../../utils/format.js';
@@ -18,6 +19,7 @@ const DENOMS = [
 
 export default function EndShiftModal() {
   const { endModalOpen, setEndModalOpen, activeShift, refreshShift, setSummaryData } = useShift();
+  const navigate = useNavigate();
   const [denoms, setDenoms] = useState({});
   const [expected, setExpected] = useState(0);
   const [loadingExpected, setLoadingExpected] = useState(true);
@@ -56,6 +58,11 @@ export default function EndShiftModal() {
   const diff = total - expected;
 
   function close() { setEndModalOpen(false); }
+
+  function goToInventoryTab(tab) {
+    close();
+    navigate('/inventory', { state: { tab } });
+  }
 
   async function handleConfirm() {
     setSubmitting(true);
@@ -96,14 +103,30 @@ export default function EndShiftModal() {
               <div className="shift-blocked-title">Cannot End Shift Yet</div>
               <div className="shift-blocked-sub">Complete the following in Inventory before closing this shift:</div>
               <div className="shift-blocked-list">
-                <div className={`shift-blocked-item ${requirements.dailyCountDone ? 'shift-blocked-item-done' : ''}`}>
-                  <span className="material-icons-outlined">{requirements.dailyCountDone ? 'check_circle' : 'radio_button_unchecked'}</span>
-                  Daily Inventory Count
-                </div>
-                <div className={`shift-blocked-item ${requirements.meterReadingDone ? 'shift-blocked-item-done' : ''}`}>
-                  <span className="material-icons-outlined">{requirements.meterReadingDone ? 'check_circle' : 'radio_button_unchecked'}</span>
-                  Meter Reading
-                </div>
+                {requirements.dailyCountDone ? (
+                  <div className="shift-blocked-item shift-blocked-item-done">
+                    <span className="material-icons-outlined">check_circle</span>
+                    Daily Inventory Count
+                  </div>
+                ) : (
+                  <button type="button" className="shift-blocked-item shift-blocked-item-link" onClick={() => goToInventoryTab('daily')}>
+                    <span className="material-icons-outlined">radio_button_unchecked</span>
+                    Daily Inventory Count
+                    <span className="material-icons-outlined shift-blocked-item-arrow">chevron_right</span>
+                  </button>
+                )}
+                {requirements.meterReadingDone ? (
+                  <div className="shift-blocked-item shift-blocked-item-done">
+                    <span className="material-icons-outlined">check_circle</span>
+                    Meter Reading
+                  </div>
+                ) : (
+                  <button type="button" className="shift-blocked-item shift-blocked-item-link" onClick={() => goToInventoryTab('meter')}>
+                    <span className="material-icons-outlined">radio_button_unchecked</span>
+                    Meter Reading
+                    <span className="material-icons-outlined shift-blocked-item-arrow">chevron_right</span>
+                  </button>
+                )}
               </div>
               <button type="button" className="btn-cancel-delete" style={{ width: '100%', marginTop: 16 }} onClick={close}>Close</button>
             </div>
