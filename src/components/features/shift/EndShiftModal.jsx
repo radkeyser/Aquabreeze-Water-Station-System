@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { endShift } from '../../../api/shift.js';
+import { endShift, checkShiftCloseRequirements } from '../../../api/shift.js';
 import { getCashDrawerData } from '../../../api/cashDrawer.js';
 import { formatPeso } from '../../../utils/format.js';
 import { showToast } from '../../../utils/toast.js';
@@ -23,6 +23,8 @@ export default function EndShiftModal() {
   const [loadingExpected, setLoadingExpected] = useState(true);
   const [step, setStep] = useState('count');
   const [submitting, setSubmitting] = useState(false);
+  const [requirements, setRequirements] = useState(null);
+  const [checkingRequirements, setCheckingRequirements] = useState(true);
 
   const ZERO_DENOMS = { '1000': '0', '500': '0', '200': '0', '100': '0', '50': '0', '20': '0', coins: '0' };
 
@@ -31,10 +33,18 @@ export default function EndShiftModal() {
     setStep('count');
     setDenoms(ZERO_DENOMS);
     setLoadingExpected(true);
+    setCheckingRequirements(true);
+    setRequirements(null);
+
     getCashDrawerData()
       .then((data) => setExpected(data?.expectedCash || 0))
       .catch(() => setExpected(0))
       .finally(() => setLoadingExpected(false));
+
+    checkShiftCloseRequirements()
+      .then(setRequirements)
+      .catch(() => setRequirements({ dailyCountDone: false, meterReadingDone: false }))
+      .finally(() => setCheckingRequirements(false));
   }, [endModalOpen, activeShift]);
 
   if (!endModalOpen) return null;
@@ -65,6 +75,8 @@ export default function EndShiftModal() {
     }
   }
 
+  const blocked = requirements && (!requirements.dailyCountDone || !requirements.meterReadingDone);
+
   return (
     <div className="pay-modal-overlay show">
       <div className="pay-modal" style={{ maxWidth: 440, maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
@@ -76,7 +88,26 @@ export default function EndShiftModal() {
           <button type="button" className="pdp-close-btn" onClick={close}><span className="material-icons-outlined">close</span></button>
         </div>
         <div className="pay-modal-body" style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
-          {step === 'count' ? (
+          {checkingRequirements ? (
+            <div style={{ padding: '40px 0', textAlign: 'center' }}><div className="spinner" /></div>
+          ) : blocked ? (
+            <div className="shift-blocked">
+              <span className="material-icons-outlined shift-blocked-icon">block</span>
+              <div className="shift-blocked-title">Cannot End Shift Yet</div>
+              <div className="shift-blocked-sub">Complete the following in Inventory before closing this shift:</div>
+              <div className="shift-blocked-list">
+                <div className={`shift-blocked-item ${requirements.dailyCountDone ? 'shift-blocked-item-done' : ''}`}>
+                  <span className="material-icons-outlined">{requirements.dailyCountDone ? 'check_circle' : 'radio_button_unchecked'}</span>
+                  Daily Inventory Count
+                </div>
+                <div className={`shift-blocked-item ${requirements.meterReadingDone ? 'shift-blocked-item-done' : ''}`}>
+                  <span className="material-icons-outlined">{requirements.meterReadingDone ? 'check_circle' : 'radio_button_unchecked'}</span>
+                  Meter Reading
+                </div>
+              </div>
+              <button type="button" className="btn-cancel-delete" style={{ width: '100%', marginTop: 16 }} onClick={close}>Close</button>
+            </div>
+          ) : step === 'count' ? (
             <>
               <div className="shift-expected-box">
                 <div className="shift-expected-label">Expected Cash in Drawer:</div>

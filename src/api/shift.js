@@ -43,4 +43,21 @@ export async function getDayReportForShift(shiftId) {
   return data;
 }
 
-export default { getActiveShift, getShiftStatus, startShift, endShift, getDayReportForShift };
+export async function checkShiftCloseRequirements() {
+  const today = formatDate(new Date());
+
+  const [{ data: invData, error: invErr }, { data: mrData, error: mrErr }] = await Promise.all([
+    supabase.from('daily_inventory').select('record_id').eq('date', today).limit(1),
+    supabase.from('meter_reading').select('record_id').eq('date', today).limit(1),
+  ]);
+
+  if (invErr) throw invErr;
+  if (mrErr) throw mrErr;
+
+  return {
+    dailyCountDone: !!invData?.length,
+    meterReadingDone: !!mrData?.length,
+  };
+}
+
+export default { getActiveShift, getShiftStatus, startShift, endShift, getDayReportForShift, checkShiftCloseRequirements };

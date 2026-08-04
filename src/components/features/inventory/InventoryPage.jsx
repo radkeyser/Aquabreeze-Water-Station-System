@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import RequireShift from '../../../components/features/shift/RequireShift.jsx';
 import DashboardTab from './DashboardTab.jsx';
 import DailyCountTab from './DailyCountTab.jsx';
 import DeliveryTab from './DeliveryTab.jsx';
@@ -16,7 +17,7 @@ const TABS = [
   { key: 'meter', icon: 'speed', label: 'Meter Reading' },
 ];
 
-export default function InventoryPage() {
+function InventoryPageContent() {
   const [tab, setTab] = useState('dashboard');
 
   return (
@@ -43,5 +44,13 @@ export default function InventoryPage() {
         {tab === 'meter' && <MeterReadingTab onGoToDaily={() => setTab('daily')} />}
       </div>
     </div>
+  );
+}
+
+export default function InventoryPage() {
+  return (
+    <RequireShift>
+      <InventoryPageContent />
+    </RequireShift>
   );
 }
