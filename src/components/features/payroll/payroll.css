@@ -325,7 +325,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
-  color: hsl(var(--fg));
+  color: var(--fg);
   font-size: 16px;
   font-weight: 700;
   line-height: 1;

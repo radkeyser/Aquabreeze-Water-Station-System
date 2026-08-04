@@ -172,39 +172,64 @@ body {
   .pg-size-select, .pg-page-input { min-width: 0; flex: 1 1 auto; }
 }
 
-/* Toast / notification styles */
+/* Toast / notification styles — bolder + auto-closing progress bar */
 .app-toast {
+  position: relative;
   display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 220px;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 280px;
   max-width: 420px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(15,23,42,0.08);
+  padding: 16px 18px;
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(15,23,42,0.18), 0 4px 10px rgba(15,23,42,0.08);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--fg);
+  border-left: 5px solid transparent;
+  background: #fff;
+  overflow: hidden;
 }
-.app-toast .toast-icon { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:8px; font-size:16px; }
-.app-toast .toast-message { flex:1; }
 
-.app-toast.info { background: var(--primary-light); color: var(--primary); }
-.app-toast.info .toast-icon { background: rgba(255,255,255,0.4); color: var(--primary); }
-.app-toast .toast-icon { display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; margin-right:8px; background: rgba(255,255,255,0.5); color: inherit; font-size:18px }
-.app-toast { display:inline-flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px; box-shadow: var(--shadow); }
+.app-toast .toast-icon-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  background: rgba(255,255,255,0.5);
+}
+.app-toast .toast-icon { font-size: 20px; }
+.app-toast .toast-body { flex: 1; min-width: 0; }
+.app-toast .toast-message { line-height: 1.35; }
+.app-toast .toast-subtitle { font-size: 12px; font-weight: 500; opacity: 0.85; margin-top: 2px; }
+
+.app-toast .toast-close {
+  border: none; background: transparent; cursor: pointer;
+  font-size: 13px; line-height: 1; color: inherit; opacity: 0.55;
+  padding: 4px; flex-shrink: 0;
+}
+.app-toast .toast-close:hover { opacity: 1; }
+
+.app-toast .toast-progress {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 4px; background: rgba(0,0,0,0.06);
+}
+.app-toast .toast-progress-bar {
+  height: 100%; width: 100%; background: currentColor; opacity: 0.55;
+}
 
 /* validation highlight for inline fields */
 .toast-validation-highlight { box-shadow: 0 0 0 4px rgba(255,76,83,0.08), 0 0 0 1px rgba(255,76,83,0.45) !important; border-color: rgba(255,76,83,0.6) !important; }
 
-.app-toast.success { background: var(--secondary); color: var(--secondary-fg); }
-.app-toast.success .toast-icon { background: rgba(255,255,255,0.12); color: var(--secondary-fg); }
+.app-toast.info    { background: var(--primary-light); color: var(--primary-dark); border-left-color: var(--primary); }
+.app-toast.info .toast-icon-badge { background: rgba(255,255,255,0.6); color: var(--primary); }
 
-.app-toast.error { background: var(--destructive-light); color: var(--destructive); }
-.app-toast.error .toast-icon { background: rgba(255,255,255,0.12); color: var(--destructive); }
+.app-toast.success { background: hsl(150,45%,95%); color: hsl(150,45%,22%); border-left-color: var(--secondary); }
+.app-toast.success .toast-icon-badge { background: rgba(255,255,255,0.6); color: hsl(150,45%,30%); }
 
-.app-toast.warn { background: hsl(38, 90%, 94%); color: hsl(38,70%,45%); }
-.app-toast.warn .toast-icon { background: rgba(255,255,255,0.12); color: hsl(38,70%,45%); }
+.app-toast.error   { background: var(--destructive-light); color: var(--destructive); border-left-color: var(--destructive); }
+.app-toast.error .toast-icon-badge { background: rgba(255,255,255,0.6); color: var(--destructive); }
+
+.app-toast.warn    { background: hsl(38, 90%, 94%); color: hsl(38,70%,35%); border-left-color: hsl(38,80%,50%); }
+.app-toast.warn .toast-icon-badge { background: rgba(255,255,255,0.6); color: hsl(38,70%,45%); }
 .export-date-presets { display:flex; flex-wrap:wrap; gap:8px; }
 .export-preset { border:none; border-radius:999px; padding:10px 14px; background: var(--muted); color: var(--muted-fg); cursor:pointer; font-size:13px; font-weight:700; }
 .export-preset:hover { background: rgb(238,241,245); }

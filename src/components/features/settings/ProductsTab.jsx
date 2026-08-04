@@ -6,7 +6,7 @@ import './settings.css';
 
 function OptPeso({ value }) {
   if (value > 0) return formatPeso(value);
-  return <span style={{ color: 'hsl(var(--muted-fg))' }}>—</span>;
+  return <span style={{ color: 'var(--muted-fg)' }}>—</span>;
 }
 
 function handleApiError(err, showToast) {
@@ -153,14 +153,14 @@ export default function ProductsTab({ showToast }) {
             <tbody>
               {!products.length ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'hsl(var(--muted-fg))' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted-fg)' }}>
                     No products found
                   </td>
                 </tr>
               ) : (
                 products.map((p) => (
                   <tr key={p.id}>
-                    <td style={{ color: 'hsl(var(--muted-fg))', fontSize: 12 }}>{p.id}</td>
+                    <td style={{ color: 'var(--muted-fg)', fontSize: 12 }}>{p.id}</td>
                     <td className="text-bold">{p.name}</td>
                     <td>{formatPeso(p.price)}</td>
                     <td><OptPeso value={p.pickupPrice} /></td>
@@ -224,7 +224,7 @@ export default function ProductsTab({ showToast }) {
         </div>
         <div className="pdp-field">
           <label className="pdp-label" htmlFor="prodPickup">
-            Pickup Price <span style={{ color: 'hsl(var(--muted-fg))', fontWeight: 400 }}>(optional)</span>
+            Pickup Price <span style={{ color: 'var(--muted-fg)', fontWeight: 400 }}>(optional)</span>
           </label>
           <input
             id="prodPickup"
@@ -275,7 +275,7 @@ export default function ProductsTab({ showToast }) {
       >
         <div className="pay-modal-info">
           <div className="pay-modal-customer">{deleteTarget?.name || '--'}</div>
-          <div className="pay-modal-debt" style={{ color: 'hsl(var(--destructive))' }}>
+          <div className="pay-modal-debt" style={{ color: 'var(--destructive)' }}>
             This will permanently remove the product.
           </div>
         </div>
@@ -286,7 +286,7 @@ export default function ProductsTab({ showToast }) {
           <button
             type="button"
             className="btn-primary"
-            style={{ background: 'hsl(var(--destructive))', flex: 1 }}
+            style={{ background: 'var(--destructive)', flex: 1 }}
             disabled={submitting}
             onClick={handleDelete}
           >

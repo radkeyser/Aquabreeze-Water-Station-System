@@ -6,12 +6,12 @@ import './settings.css';
 
 function cell(v) {
   if (v > 0) return v;
-  return <span style={{ color: 'hsl(var(--border))' }}>—</span>;
+  return <span style={{ color: 'var(--border)' }}>—</span>;
 }
 
 function priceCell(v) {
   if (v > 0) return formatPeso(v);
-  return <span style={{ color: 'hsl(var(--border))' }}>—</span>;
+  return <span style={{ color: 'var(--border)' }}>—</span>;
 }
 
 function handleApiError(err, showToast) {
@@ -166,14 +166,14 @@ export default function SuppliersTab({ showToast }) {
             <tbody>
               {!suppliers.length ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'hsl(var(--muted-fg))' }}>
+                  <td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--muted-fg)' }}>
                     No suppliers found
                   </td>
                 </tr>
               ) : (
                 suppliers.map((s) => (
                   <tr key={s.id}>
-                    <td style={{ color: 'hsl(var(--muted-fg))', fontSize: 12 }}>{s.id}</td>
+                    <td style={{ color: 'var(--muted-fg)', fontSize: 12 }}>{s.id}</td>
                     <td className="text-bold">{s.name}</td>
                     <td style={{ textAlign: 'center' }}>{cell(s.qty500)}</td>
                     <td style={{ textAlign: 'center' }}>{priceCell(s.price500)}</td>
@@ -308,7 +308,7 @@ export default function SuppliersTab({ showToast }) {
       >
         <div className="pay-modal-info">
           <div className="pay-modal-customer">{deleteTarget?.name || '--'}</div>
-          <div className="pay-modal-debt" style={{ color: 'hsl(var(--destructive))' }}>
+          <div className="pay-modal-debt" style={{ color: 'var(--destructive)' }}>
             This will permanently remove the supplier.
           </div>
         </div>
@@ -319,7 +319,7 @@ export default function SuppliersTab({ showToast }) {
           <button
             type="button"
             className="btn-primary"
-            style={{ background: 'hsl(var(--destructive))', flex: 1 }}
+            style={{ background: 'var(--destructive)', flex: 1 }}
             disabled={submitting}
             onClick={handleDelete}
           >

@@ -1,20 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import ProductsTab from './ProductsTab.jsx';
 import SuppliersTab from './SuppliersTab.jsx';
 import OthersTab from './OthersTab.jsx';
+import { showToast } from '../../../utils/toast.js';
 import './settings.css';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('products');
-  const [toast, setToast] = useState('');
-
-  const showToast = useCallback((message) => setToast(message), []);
-
-  useEffect(() => {
-    if (!toast) return undefined;
-    const id = window.setTimeout(() => setToast(''), 2600);
-    return () => window.clearTimeout(id);
-  }, [toast]);
 
   return (
     <div className="p-4 settings-page">
@@ -51,7 +43,6 @@ export default function SettingsPage() {
         {activeTab === 'others' && <OthersTab showToast={showToast} />}
       </div>
 
-      {toast && <div className="toast-message">{toast}</div>}
-    </div>
+      </div>
   );
 }

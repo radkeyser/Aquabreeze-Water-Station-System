@@ -72,7 +72,7 @@ function DebtDropdown({ dropdown, onClose }) {
     <div className="debt-dropdown" style={style}>
       <div className="debt-dropdown-header">Charged Debts Breakdown</div>
       {debts.length === 0 ? (
-        <div style={{ padding: '12px 16px', fontSize: 13, color: 'hsl(var(--muted-fg))' }}>
+        <div style={{ padding: '12px 16px', fontSize: 13, color: 'var(--muted-fg)' }}>
           No charged debts found.
         </div>
       ) : (
@@ -81,17 +81,17 @@ function DebtDropdown({ dropdown, onClose }) {
             <div key={d.orderId} className="debt-dropdown-item">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{
-                  fontFamily: 'monospace', fontSize: 11, background: 'hsl(var(--muted))',
-                  color: 'hsl(var(--muted-fg))', padding: '1px 6px', borderRadius: 4,
+                  fontFamily: 'monospace', fontSize: 11, background: 'var(--muted)',
+                  color: 'var(--muted-fg)', padding: '1px 6px', borderRadius: 4,
                 }}
                 >
                   {d.orderId}
                 </span>
-                <span style={{ fontSize: 11, color: 'hsl(var(--muted-fg))' }}>{d.date}</span>
+                <span style={{ fontSize: 11, color: 'var(--muted-fg)' }}>{d.date}</span>
                 <span className={`badge ${d.status === 'Partial' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: 11, marginLeft: 'auto' }}>
                   {d.status}
                 </span>
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'hsl(var(--destructive))', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--destructive)', whiteSpace: 'nowrap' }}>
                   {formatPeso(d.amount)}
                 </span>
               </div>
@@ -99,16 +99,16 @@ function DebtDropdown({ dropdown, onClose }) {
                 <span style={{ fontSize: 13, fontWeight: 700 }}>{d.customerName}</span>
                 {d.product && (
                   <>
-                    <span style={{ fontSize: 12, color: 'hsl(var(--muted-fg))' }}>·</span>
-                    <span style={{ fontSize: 12, color: 'hsl(var(--muted-fg))' }}>{d.product}</span>
+                    <span style={{ fontSize: 12, color: 'var(--muted-fg)' }}>·</span>
+                    <span style={{ fontSize: 12, color: 'var(--muted-fg)' }}>{d.product}</span>
                   </>
                 )}
               </div>
             </div>
           ))}
           <div className="debt-dropdown-footer">
-            <span style={{ color: 'hsl(var(--muted-fg))' }}>Total Charged</span>
-            <span style={{ color: 'hsl(var(--destructive))' }}>{formatPeso(total)}</span>
+            <span style={{ color: 'var(--muted-fg)' }}>Total Charged</span>
+            <span style={{ color: 'var(--destructive)' }}>{formatPeso(total)}</span>
           </div>
         </>
       )}
@@ -584,7 +584,7 @@ export default function PayrollPage() {
   if (loading && employees.length === 0) {
     return (
       <div className="page-content" style={{ padding: 24 }}>
-        <p style={{ color: 'hsl(var(--muted-fg))' }}>Loading payroll…</p>
+        <p style={{ color: 'var(--muted-fg)' }}>Loading payroll…</p>
       </div>
     );
   }
@@ -592,7 +592,7 @@ export default function PayrollPage() {
   return (
     <div className="page-content payroll-page">
       {error && (
-        <div className="shift-warning-banner" style={{ background: 'hsl(var(--destructive-light))', borderColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive))' }}>
+        <div className="shift-warning-banner" style={{ background: 'var(--destructive-light)', borderColor: 'var(--destructive)', color: 'var(--destructive)' }}>
           <span className="material-icons-outlined">error_outline</span>
           {error}
         </div>
@@ -689,7 +689,7 @@ export default function PayrollPage() {
 
       {massClearMode && (
         <div className="mass-clear-bar">
-          <span className="material-icons-outlined" style={{ fontSize: 18, color: 'hsl(var(--destructive))' }}>checklist</span>
+          <span className="material-icons-outlined" style={{ fontSize: 18, color: 'var(--destructive)' }}>checklist</span>
           <span className="mass-clear-count-label">{selectedIds.size} selected</span>
           <div className="mass-clear-actions">
             <button
@@ -734,7 +734,7 @@ export default function PayrollPage() {
                   <span title="Uncollected customer debts charged to this staff">
                     Debt Charge
                     {' '}
-                    <span className="material-icons-outlined" style={{ fontSize: 13, verticalAlign: 'middle', color: 'hsl(var(--muted-fg))' }}>info</span>
+                    <span className="material-icons-outlined" style={{ fontSize: 13, verticalAlign: 'middle', color: '(var(--muted-fg)' }}>info</span>
                   </span>
                 </th>
                 <th className="payroll-col-gov">SSS</th>
@@ -749,7 +749,7 @@ export default function PayrollPage() {
             <tbody id="payrollTbody">
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan={15} style={{ textAlign: 'center', padding: 40, color: 'hsl(var(--muted-fg))' }}>
+                  <td colSpan={15} style={{ textAlign: 'center', padding: 40, color: 'var(--muted-fg)' }}>
                     No staff found
                   </td>
                 </tr>
@@ -757,10 +757,10 @@ export default function PayrollPage() {
                 const rowIndex = idx + 2;
                 const revealed = revealedIds.has(emp.id);
                 const expColor = emp.expectedSalary < 0
-                  ? 'hsl(var(--destructive))'
+                  ? 'var(--destructive)'
                   : emp.expectedSalary > 0
                     ? 'hsl(150,45%,38%)'
-                    : 'hsl(var(--primary))';
+                    : 'var(--primary)';
                 return (
                   <tr
                     key={emp.id}
@@ -818,23 +818,23 @@ export default function PayrollPage() {
                             </span>
                           </button>
                         ) : (
-                          <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>
+                          <span style={{ color: 'var(--muted-fg)' }}>--</span>
                         )}
                       </MaskedCell>
                     </td>
                     <td className="payroll-col-gov" data-label="SSS">
                       <MaskedCell revealed={revealed} maskId={`sss-mask-${rowIndex}`} valId={`sss-${rowIndex}`}>
-                        {emp.sss > 0 ? formatPeso(emp.sss) : <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>}
+                        {emp.sss > 0 ? formatPeso(emp.sss) : <span style={{ color: 'var(--muted-fg)' }}>--</span>}
                       </MaskedCell>
                     </td>
                     <td className="payroll-col-gov" data-label="Pag-IBIG">
                       <MaskedCell revealed={revealed} maskId={`pagibig-mask-${rowIndex}`} valId={`pagibig-${rowIndex}`}>
-                        {emp.pagibig > 0 ? formatPeso(emp.pagibig) : <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>}
+                        {emp.pagibig > 0 ? formatPeso(emp.pagibig) : <span style={{ color: 'var(--muted-fg)' }}>--</span>}
                       </MaskedCell>
                     </td>
                     <td className="payroll-col-gov" data-label="PhilHealth">
                       <MaskedCell revealed={revealed} maskId={`philhealth-mask-${rowIndex}`} valId={`philhealth-${rowIndex}`}>
-                        {emp.philhealth > 0 ? formatPeso(emp.philhealth) : <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>}
+                        {emp.philhealth > 0 ? formatPeso(emp.philhealth) : <span style={{ color: 'var(--muted-fg)' }}>--</span>}
                       </MaskedCell>
                     </td>
                     <td className="payroll-col-expected" id={`expected-cell-${rowIndex}`} data-label="Expected">
@@ -852,11 +852,11 @@ export default function PayrollPage() {
                         <>
                           <div style={{ fontSize: 12, fontWeight: 600 }}>{emp.dateReleased}</div>
                           {emp.timeReleased && (
-                            <div style={{ fontSize: 11, color: 'hsl(var(--muted-fg))' }}>{emp.timeReleased}</div>
+                            <div style={{ fontSize: 11, color: 'var(--muted-fg)' }}>{emp.timeReleased}</div>
                           )}
                         </>
                       ) : (
-                        <span style={{ color: 'hsl(var(--muted-fg))' }}>--</span>
+                        <span style={{ color: 'var(--muted-fg)' }}>--</span>
                       )}
                     </td>
                     <td className="payroll-col-actions" data-label="Actions">
@@ -1056,7 +1056,7 @@ export default function PayrollPage() {
             <div className="edit-expected-preview">
               Net Pay:
               {' '}
-              <strong style={{ color: editPreview < 0 ? 'hsl(var(--destructive))' : editPreview > 0 ? 'hsl(150,45%,38%)' : 'hsl(var(--primary))' }}>
+              <strong style={{ color: editPreview < 0 ? 'var(--destructive)' : editPreview > 0 ? 'hsl(150,45%,38%)' : 'var(--primary)' }}>
                 {formatPeso(editPreview)}
               </strong>
             </div>
@@ -1119,13 +1119,13 @@ export default function PayrollPage() {
           <>
             <div className="pay-modal-info">
               <div className="pay-modal-customer" style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{deletingEmployee.name}</div>
-              <div className="pay-modal-debt" style={{ color: 'hsl(var(--destructive))' }}>
+              <div className="pay-modal-debt" style={{ color: 'var(--destructive)' }}>
                 This will remove the staff from Payroll and Staff sheets, and clear their name from assigned customers.
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <button type="button" className="btn-cancel-delete" onClick={() => { setDeleteOpen(false); setDeletingEmployee(null); }}>Cancel</button>
-              <button type="button" className="btn-primary" style={{ flex: 1, background: 'hsl(var(--destructive))' }} disabled={submitting} onClick={handleDelete}>
+              <button type="button" className="btn-primary" style={{ flex: 1, background: 'var(--destructive)' }} disabled={submitting} onClick={handleDelete}>
                 {submitting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
@@ -1139,13 +1139,13 @@ export default function PayrollPage() {
           <div className="pay-modal-customer" style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>
             Clear records for {selectedIds.size} staff member{selectedIds.size > 1 ? 's' : ''}?
           </div>
-          <div className="pay-modal-debt" style={{ color: 'hsl(var(--destructive))' }}>
+          <div className="pay-modal-debt" style={{ color: 'var(--destructive)' }}>
             This will reset Days Worked, Advance, Commission, Debt Charge, Expected Salary and set Status back to Pending.
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button type="button" className="btn-cancel-delete" onClick={() => setMassClearConfirmOpen(false)}>Cancel</button>
-          <button type="button" className="btn-primary" style={{ flex: 1, background: 'hsl(var(--destructive))' }} disabled={submitting} onClick={handleMassClear}>
+          <button type="button" className="btn-primary" style={{ flex: 1, background: 'var(--destructive)' }} disabled={submitting} onClick={handleMassClear}>
             {submitting ? 'Clearing...' : 'Yes, Clear All'}
           </button>
         </div>
@@ -1189,7 +1189,7 @@ export default function PayrollPage() {
             </div>
             <div className="charge-debts-debt-list">
               {pendingChargeDebts.length === 0 ? (
-                <div style={{ padding: 20, textAlign: 'center', color: 'hsl(var(--muted-fg))', fontSize: 13 }}>
+                <div style={{ padding: 20, textAlign: 'center', color: 'var(--muted-fg)', fontSize: 13 }}>
                   No uncharged debts found for {chargingStaffName}.
                 </div>
               ) : pendingChargeDebts.map((d) => (
@@ -1197,14 +1197,14 @@ export default function PayrollPage() {
                   <div className="payroll-charge-debt-row">
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700 }}>{d.customerName}</div>
-                      <div style={{ fontSize: 11, color: 'hsl(var(--muted-fg))' }}>{d.orderId} · {d.date}</div>
+                      <div style={{ fontSize: 11, color: 'var(--muted-fg)' }}>{d.orderId} · {d.date}</div>
                     </div>
                     <span className={`badge ${d.status === 'Partial' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: 11 }}>{d.status}</span>
-                    <span style={{ fontWeight: 800, color: 'hsl(var(--destructive))', whiteSpace: 'nowrap' }}>{formatPeso(d.amount)}</span>
+                    <span style={{ fontWeight: 800, color: 'var(--destructive)', whiteSpace: 'nowrap' }}>{formatPeso(d.amount)}</span>
                   </div>
                   <div className="payroll-charge-debt-row2">
                     {d.product ? (
-                      <span style={{ fontSize: 12, color: 'hsl(var(--muted-fg)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 12, color: 'var(--muted-fg)', display: 'flex', alignItems: 'center', gap: 4 }}>
                         <span className="material-icons-outlined" style={{ fontSize: 13 }}>shopping_bag</span>
                         {d.product}
                       </span>
@@ -1224,14 +1224,14 @@ export default function PayrollPage() {
             </div>
             <div className="pay-modal-info" style={{ marginBottom: 4 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, color: 'hsl(var(--muted-fg))' }}>Total to Charge</span>
-                <span style={{ fontSize: 17, fontWeight: 800, color: 'hsl(var(--destructive))' }}>{formatPeso(chargeDebtsTotal)}</span>
+                <span style={{ fontSize: 13, color: 'var(--muted-fg)' }}>Total to Charge</span>
+                <span style={{ fontSize: 17, fontWeight: 800, color: 'var(--destructive)' }}>{formatPeso(chargeDebtsTotal)}</span>
               </div>
             </div>
             <button
               type="button"
               className="btn-primary"
-              style={{ background: 'hsl(var(--destructive))' }}
+              style={{ background: 'var(--destructive)' }}
               disabled={pendingChargeDebts.length === 0}
               onClick={() => setChargeDebtsConfirmOpen(true)}
             >
@@ -1250,15 +1250,15 @@ export default function PayrollPage() {
             Charge {pendingChargeDebts.length} debt(s) to {chargingStaffName}?
           </div>
           <div className="pay-modal-debt" style={{ marginTop: 6 }}>
-            Total: <strong style={{ color: 'hsl(var(--destructive))' }}>{formatPeso(chargeDebtsTotal)}</strong>
+            Total: <strong style={{ color: 'var(--destructive)' }}>{formatPeso(chargeDebtsTotal)}</strong>
           </div>
-          <div className="pay-modal-debt" style={{ marginTop: 4, color: 'hsl(var(--muted-fg))' }}>
+          <div className="pay-modal-debt" style={{ marginTop: 4, color: 'var(--muted-fg)' }}>
             This will mark these debts as charged and add the total to their Debt Charge column.
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <button type="button" className="btn-cancel-delete" onClick={() => setChargeDebtsConfirmOpen(false)}>Cancel</button>
-          <button type="button" className="btn-primary" style={{ flex: 1, background: 'hsl(var(--destructive))' }} disabled={submitting} onClick={handleChargeDebts}>
+          <button type="button" className="btn-primary" style={{ flex: 1, background: 'var(--destructive)' }} disabled={submitting} onClick={handleChargeDebts}>
             <span className="material-icons-outlined" style={{ fontSize: 16, verticalAlign: 'middle' }}>money_off</span>
             {' '}
             {submitting ? 'Charging...' : 'Yes, Charge Now'}
@@ -1273,7 +1273,7 @@ export default function PayrollPage() {
             {cdpCustomer}  {cdpOrderId}
           </div>
           <div className="pay-modal-debt">
-            Outstanding: <strong style={{ color: 'hsl(var(--destructive))' }}>{formatPeso(cdpDebt)}</strong>
+            Outstanding: <strong style={{ color: 'var(--destructive)' }}>{formatPeso(cdpDebt)}</strong>
           </div>
         </div>
         <div className="pdp-field">
