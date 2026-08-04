@@ -17,7 +17,12 @@ export function computeProcessed(data = {}, dateFilter = 'today', customFrom = '
 
   const salesByProdMap = {};
   sales.forEach((r) => {
-    const name = r.product || 'Unknown';
+    let name = r.product || 'Unknown';
+    if (name === '5 Gallon') {
+      const sp = String(r.slim_poly || '').toLowerCase();
+      if (sp === 'slim') name = '5 Gallon (Slim)';
+      else if (sp === 'poly') name = '5 Gallon (Poly)';
+    }
     if (!salesByProdMap[name]) salesByProdMap[name] = { name, qty: 0, total: 0 };
     salesByProdMap[name].qty += Number(r.quantity || 0);
     salesByProdMap[name].total += Number(r.total_amount||r.total || 0);

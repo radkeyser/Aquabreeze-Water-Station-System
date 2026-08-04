@@ -428,7 +428,7 @@ body {
 .dash-mini-body tbody td { padding:10px 14px; border-bottom:1px solid rgb(238,241,245); color: var(--fg); font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .dash-mini-foot tfoot td { padding:10px 14px; background: var(--muted); font-size:13px; font-weight:700; white-space:nowrap; }
 .dash-mini-foot tfoot td { text-align: right; }
-.dash-card-tfoot { padding: 10px 14px; }
+.dash-card-tfoot { padding: 0px; }
 .dash-card-tfoot .total { font-weight:800; }
 .dash-mini-empty { text-align:center !important; padding:20px !important; color: var(--muted-fg); font-style:italic; font-size:14px; }
 .dash-charts-grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; overflow-y:auto; padding-bottom:8px; height:100%; }
