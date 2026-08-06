@@ -40,7 +40,7 @@ function OrderBreakdown({ orders, shiftOpen, customerName, onPay }) {
     <div className="pc-breakdown">
       <div className="pc-breakdown-title">
         <span className="material-icons-outlined">receipt_long</span>
-        Order Breakdown
+        {orders.length > 1 ? 'Order Breakdown' : 'Order Details'}
       </div>
       {orders.map((o) => {
         const oProd = o.product + (o.slimPoly && o.product === '5 Gallon' ? ` (${o.slimPoly})` : '');
@@ -118,6 +118,7 @@ export default function PautangCard({
   const prodLabel = productStr(credit.product, credit.qty, credit.slimPoly);
   const orders = credit.orders || [];
   const hasBreakdown = orders.length > 1;
+  const singleOrder = orders.length === 1 ? orders[0] : null;
 
   return (
     <div
@@ -158,6 +159,9 @@ export default function PautangCard({
           <div className="pc-meta">
             <span className="mono-label">{credit.id}</span>
             {' · '}{credit.date}
+            {singleOrder?.time && (
+              <>{' · '}<span className="pc-meta-time"><span className="material-icons-outlined">schedule</span>{singleOrder.time}</span></>
+            )}
             {' · '}
             <PointPersonWidget
               orderIds={credit.orderIds || [credit.id]}
@@ -208,6 +212,21 @@ export default function PautangCard({
               customerName={displayName}
               onPay={onPay}
             />
+          )}
+          {!hasBreakdown && singleOrder?.payHistory?.length > 0 && (
+            <div className="pc-single-history">
+              <div className="pc-breakdown-title">
+                <span className="material-icons-outlined">history</span>
+                Payment History
+              </div>
+              {singleOrder.payHistory.map((h, idx) => (
+                <div key={idx} className="pc-order-hist-row pc-single-hist-row">
+                  <span className="pc-order-hist-date">{h.date}{h.time ? ` · ${h.time}` : ''}</span>
+                  <span className="pc-order-hist-desc">{h.description || 'Payment'}</span>
+                  <span className="pc-order-hist-amt">+{formatPeso(h.amount)}</span>
+                </div>
+              ))}
+            </div>
           )}
           <div className="pc-details">
             <div className="pc-detail-item">

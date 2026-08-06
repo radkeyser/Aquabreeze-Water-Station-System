@@ -622,6 +622,27 @@
 .order-detail-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted-fg); }
 .order-detail-val { font-size: 13px; font-weight: 600; }
 
+.pc-single-history {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0 16px;
+  margin-bottom: 4px;
+}
+.pc-single-hist-row {
+  background: var(--muted);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  margin-bottom: 6px;
+}
+.pc-single-hist-row:last-child { margin-bottom: 0; }
+
+.pc-meta-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--muted-fg);
+}
+.pc-meta-time .material-icons-outlined { font-size: 13px; }
+
 @media (max-width: 900px) {
   .pautang-filter-row { flex-direction: column; align-items: flex-start; gap: 8px; }
   .pautang-search-wrap { width: 100%; }
