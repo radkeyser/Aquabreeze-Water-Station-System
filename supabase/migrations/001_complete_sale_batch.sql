@@ -82,6 +82,7 @@ declare
   v_effective_rate numeric;
   v_pid           text;
   v_prod_count_ids text[] := array['PROD-000008','PROD-000009','PROD-000010','PROD-000011'];
+  v_borrowed_gallon boolean;
 begin
   v_request_id := batch->>'clientRequestId';
 
@@ -319,6 +320,35 @@ begin
           coalesce((v_item->>'tip')::numeric, 0),
           coalesce(v_item->>'notes', '')
         );
+      end if;
+
+      -- Customer is borrowing the 5-Gallon container(s) along with this
+      -- sale — create a Borrowed record and add to their running gallon
+      -- total. Skipped for Pickup Customer (never has a customer row).
+      v_borrowed_gallon := coalesce((v_item->>'borrowedGallon')::boolean, false);
+      if v_borrowed_gallon
+         and coalesce((v_item->>'qty')::numeric, 0) > 0
+         and lower(v_cust_name) <> 'pickup customer'
+         and v_cust_row.customer_id is not null then
+        v_borrow_id := public.next_id('BRW'::text);
+        insert into borrowed (
+          borrow_id, date, time, customer_id, customer_name,
+          gallon, dispenser, borrow_status, record_status
+        ) values (
+          v_borrow_id,
+          v_date,
+          v_time,
+          v_cust_row.customer_id,
+          v_cust_name,
+          coalesce((v_item->>'qty')::numeric, 0),
+          0,
+          'Borrowed',
+          'No'
+        );
+
+        update customers
+        set gallon = gallon + coalesce((v_item->>'qty')::numeric, 0)
+        where customer_id = v_cust_row.customer_id;
       end if;
     end loop;
 

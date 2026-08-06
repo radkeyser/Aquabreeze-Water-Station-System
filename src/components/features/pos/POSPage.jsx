@@ -68,6 +68,7 @@ function POSPageContent() {
   const [tip, setTip] = useState(0);
   const [notes, setNotes] = useState('');
   const [pointPerson, setPointPerson] = useState('');
+  const [borrowedGallon, setBorrowedGallon] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [editCartIndex, setEditCartIndex] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
@@ -248,6 +249,7 @@ function POSPageContent() {
     setTip(0);
     setNotes('');
     setPointPerson('');
+    setBorrowedGallon(false);
   }
 
   function openProductPanel(product) {
@@ -305,12 +307,17 @@ function POSPageContent() {
       return;
     }
 
+    if (borrowedGallon && customerName === 'Pickup Customer') {
+      showToast('Borrowed containers cannot be recorded for Pickup Customer.', { icon: 'error', type: 'error' });
+      return;
+    }
+
     const total = activePrice * qty;
     const paid = isPickup ? total : effectiveAmountPaid;
     const status = isPickup ? 'Paid' : panelStatus;
 
     setCart((current) => {
-      const existing = current.find((i) => i.productId === selectedProduct.id && i.customer === customerName && !i.isBorrow && i.slimPoly === slimPoly && (i.paymentMethod || 'Cash') === paymentMethod);
+      const existing = current.find((i) => i.productId === selectedProduct.id && i.customer === customerName && !i.isBorrow && i.slimPoly === slimPoly && !!i.borrowedGallon === borrowedGallon && (i.paymentMethod || 'Cash') === paymentMethod);
       if (existing) {
         return current.map((i) => {
           if (i.id !== existing.id) return i;
@@ -320,7 +327,7 @@ function POSPageContent() {
           return { ...i, qty: newQty, total: newTotal, amountPaid: newPaid, status: newPaid >= newTotal ? 'Paid' : newPaid > 0 ? 'Partial' : 'Utang' };
         });
       }
-      return [...current, { id: `${selectedProduct.id}-${Date.now()}`, productId: selectedProduct.id, productName: selectedProduct.name, price: activePrice, qty, customer: customerName, location, pointPerson, total, amountPaid: paid, tip, notes, status, slimPoly, commissionRate: selectedProduct.commissionRate || 0, isNewCustomer, isBorrow: false, paymentMethod }];
+      return [...current, { id: `${selectedProduct.id}-${Date.now()}`, productId: selectedProduct.id, productName: selectedProduct.name, price: activePrice, qty, customer: customerName, location, pointPerson, total, amountPaid: paid, tip, notes, status, slimPoly, commissionRate: selectedProduct.commissionRate || 0, isNewCustomer, isBorrow: false, paymentMethod, borrowedGallon }];
     });
 
     closePanel();
@@ -419,6 +426,7 @@ function POSPageContent() {
     setTip(item.tip || 0);
     setNotes(item.notes || '');
     setPointPerson(item.pointPerson || '');
+    setBorrowedGallon(item.borrowedGallon || false);
   }
 
   function closeEditCartModal() {
@@ -449,7 +457,7 @@ function POSPageContent() {
     const customerName = chosenCustomer?.isPickup ? 'Pickup Customer' : (chosenCustomer?.name || item.customer);
     const location = chosenCustomer?.isPickup ? '' : (chosenCustomer?.location || item.location || '');
 
-    setCart((current) => current.map((row, idx) => idx !== editCartIndex ? row : { ...row, price: activePrice, qty, total, amountPaid: paid, status, customer: customerName, location, pointPerson, slimPoly, tip, notes, paymentMethod }));
+    setCart((current) => current.map((row, idx) => idx !== editCartIndex ? row : { ...row, price: activePrice, qty, total, amountPaid: paid, status, customer: customerName, location, pointPerson, slimPoly, tip, notes, paymentMethod, borrowedGallon }));
 
     closeEditCartModal();
     showToast('Cart item updated.', { icon: 'check_circle', type: 'success' });
@@ -637,6 +645,7 @@ function POSPageContent() {
                       {item.pointPerson ? <> · {item.pointPerson}</> : null}
                       {item.paymentMethod === 'GCash' && item.amountPaid > 0 ? <> · <span className="material-icons-outlined" style={{ fontSize: 12 }}>smartphone</span>GCash</> : null}
                       {item.tip > 0 ? <> · Tip: {formatPeso(item.tip)}</> : null}
+                      {item.borrowedGallon ? <> · <span className="material-icons-outlined" style={{ fontSize: 12 }}>inventory_2</span>Borrowing container</> : null}
                     </div>
                     {item.notes ? <div className="cart-row-meta cart-row-notes"><span className="material-icons-outlined">notes</span>{item.notes}</div> : null}
                   </div>
@@ -763,6 +772,15 @@ function POSPageContent() {
               </div>
             )}
           </div>
+
+          {selectedProduct?.name === '5 Gallon' && (
+            <div id="pdpBorrowedField">
+              <label className="pdp-checkbox-label">
+                <input type="checkbox" id="pdpBorrowedCheckbox" checked={borrowedGallon} onChange={(e) => setBorrowedGallon(e.target.checked)} />
+                <span><span className="material-icons-outlined" style={{ fontSize: 15, verticalAlign: 'middle' }}>inventory_2</span> Customer is borrowing this gallon container</span>
+              </label>
+            </div>
+          )}
 
           <div className="pdp-total-row"><span className="pdp-total-label">Total Amount</span><span className="pdp-total-amount" id="pdpTotal">{formatPeso(panelTotal)}</span></div>
           <div className="pdp-payment-section">
@@ -916,6 +934,14 @@ function POSPageContent() {
                   </div>
                 )}
               </div>
+              {selectedProduct?.name === '5 Gallon' && (
+                <div id="editCartBorrowedField">
+                  <label className="pdp-checkbox-label">
+                    <input type="checkbox" checked={borrowedGallon} onChange={(e) => setBorrowedGallon(e.target.checked)} />
+                    <span><span className="material-icons-outlined" style={{ fontSize: 15, verticalAlign: 'middle' }}>inventory_2</span> Customer is borrowing this gallon container</span>
+                  </label>
+                </div>
+              )}
               <div className="pdp-total-row"><span className="pdp-total-label">Total Amount</span><span className="pdp-total-amount" id="editCartTotal">{formatPeso(panelTotal)}</span></div>
               <div className="pdp-payment-section">
                 <label className="pdp-label">Amount Paid</label>

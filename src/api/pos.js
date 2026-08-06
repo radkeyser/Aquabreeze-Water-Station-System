@@ -116,6 +116,7 @@ export function buildCheckoutPayload(cart, clientRequestId) {
       tip: item.tip || 0,
       notes: item.notes || '',
       paymentMethod: item.paymentMethod || 'Cash',
+      borrowedGallon: item.borrowedGallon || false,
     });
   });
 
