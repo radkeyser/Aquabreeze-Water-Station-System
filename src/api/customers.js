@@ -129,7 +129,7 @@ export async function processReturn(payload) {
 export async function getCustomerOrders(customerName, customerId) {
   const [pautangRes, salesRes, cashRes] = await Promise.all([
     supabase.from('pautang').select('*'),
-    supabase.from('sales').select('order_id,product,quantity,total_amount,amount_paid,slim_poly'),
+    supabase.from('sales').select('order_id,time,product,quantity,total_amount,amount_paid,slim_poly'),
     supabase.from('cash_drawer').select('date,time,type,order_id,description,amount'),
   ]);
 
@@ -174,6 +174,7 @@ export async function getCustomerOrders(customerName, customerId) {
     orders.push({
       id: orderId,
       date: formatDate(pRow.date),
+      time: sale.time ? formatTime(sale.time) : '',
       product: sale.product || '—',
       qty: Number(sale.quantity) || 0,
       slimPoly: String(sale.slim_poly || ''),

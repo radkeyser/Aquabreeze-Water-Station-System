@@ -927,7 +927,7 @@ export default function CustomersPage() {
                       <div className="order-card-left">
                         <div className="order-card-id">{o.id}</div>
                         <div className="order-card-meta">
-                          {o.date}{o.pointPerson ? <> · <span style={{ color: 'hsl(var(--primary))' }}>{o.pointPerson}</span></> : null}
+                          {o.date}{o.time ? <> · {o.time}</> : null}{o.pointPerson ? <> · <span style={{ color: 'hsl(var(--primary))' }}>{o.pointPerson}</span></> : null}
                         </div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -954,7 +954,7 @@ export default function CustomersPage() {
                               <span className="material-icons-outlined" style={{ color: 'hsl(150,40%,35%)', fontSize: 16 }}>check_circle</span>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 600 }}>{formatPeso(pay.amount)} paid</div>
-                                <div style={{ fontSize: 11, color: 'hsl(var(--muted-fg))' }}>{pay.date}</div>
+                                <div style={{ fontSize: 11, color: 'hsl(var(--muted-fg))' }}>{pay.date}{pay.time ? ` · ${pay.time}` : ''}</div>
                               </div>
                             </div>
                           </div>
