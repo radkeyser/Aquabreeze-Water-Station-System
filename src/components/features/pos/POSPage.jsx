@@ -80,12 +80,20 @@ function POSPageContent() {
   const [loadingInit, setLoadingInit] = useState(true);
   const [initError, setInitError] = useState('');
   const clientRequestIdRef = useRef(null);
+  const [assignPpOpen, setAssignPpOpen] = useState(false);
+  const [assignPpValue, setAssignPpValue] = useState('');
 
   useEffect(() => {
     saveCartToStorage(cart);
   }, [cart]);
 
   const showToast = useCallback((message, options) => notify(message, options), []);
+
+  const applyPointPersonToAll = useCallback(() => {
+    setCart((prev) => prev.map((item) => (item.isBorrow ? item : { ...item, pointPerson: assignPpValue })));
+    setAssignPpOpen(false);
+    showToast(`Point person set to "${assignPpValue || 'None'}" for all cart items.`);
+  }, [assignPpValue, showToast]);
 
   const loadInitial = useCallback(async () => {
     setInitError('');
@@ -606,6 +614,12 @@ function POSPageContent() {
               <span className="cart-count-badge" id="cartCountBadge" style={{ display: cartCount > 0 ? '' : 'none' }}>{cartCount}</span>
             </div>
             <span className="cart-empty-msg" id="cartEmptyMsg" style={{ display: cart.length ? 'none' : '' }}>No items yet — tap a product to begin</span>
+            {cart.some((item) => !item.isBorrow) && (
+              <button type="button" className="btn-assign-pp" onClick={() => { setAssignPpValue(''); setAssignPpOpen(true); }}>
+                <span className="material-icons-outlined">badge</span>
+                Assign Point Person
+              </button>
+            )}
           </div>
 
           <div className="cart-items-list" id="cartItemsList">
@@ -933,6 +947,30 @@ function POSPageContent() {
       )}
 
       <div className={`pdp-overlay${panelType && panelType !== 'edit' ? ' show' : ''}`} onClick={closePanel} />
+
+      <div className={`pay-modal-overlay${assignPpOpen ? ' show' : ''}`} onClick={() => setAssignPpOpen(false)}>
+        <div className="pay-modal" style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+          <div className="pay-modal-header">
+            <div className="pay-modal-title">Assign Point Person to All</div>
+            <button type="button" className="pdp-close-btn" onClick={() => setAssignPpOpen(false)}><span className="material-icons-outlined">close</span></button>
+          </div>
+          <div className="pay-modal-body">
+            <div className="pay-modal-info">
+              <div className="pay-modal-debt">This will overwrite the point person on every non-borrow item currently in the cart, including items with no point person assigned.</div>
+            </div>
+            <div className="pdp-field">
+              <label className="pdp-label">Point Person</label>
+              <select className="pdp-select" value={assignPpValue} onChange={(e) => setAssignPpValue(e.target.value)}>
+                <option value="">Select staff...</option>
+                {staffList.map((s) => <option key={s.id} value={s.name}>{s.name}{s.role ? ` (${s.role})` : ''}</option>)}
+              </select>
+            </div>
+            <button type="button" className="btn-primary" onClick={applyPointPersonToAll}>
+              Apply to All Cart Items
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div
         className={`pay-modal-overlay checkout-confirm-overlay${showCheckout ? ' show' : ''}`}
