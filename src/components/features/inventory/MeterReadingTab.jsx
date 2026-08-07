@@ -218,17 +218,17 @@ export default function MeterReadingTab({ onGoToDaily }) {
             <AutoRow label="Beginning Stock" value={stockBeg.poly != null ? stockBeg.poly : '--'} note="Yesterday's ending" />
             <ManualRow label="Ending Stock *" unit="pcs" value={vals.stockEndPoly || ''} onChange={(val) => set('stockEndPoly', val)} />
             <AutoRow label="Sold Stock" value={`${fmtNum(soldPoly)} pcs`} note="From current shift" />
-            <ComputedRow label="Total Stock (pcs)" value={fmtNum(totalStockPoly)} formula="End + Sold − Beg" />
+            <ComputedRow label="Total Refilled Stock (pcs)" value={fmtNum(totalStockPoly)} formula="End + Sold − Beg" />
           </div>
           <div className="mr-col">
             <div className="mr-col-head">Slim</div>
             <AutoRow label="Beginning Stock" value={stockBeg.slim != null ? stockBeg.slim : '--'} note="Yesterday's ending" />
             <ManualRow label="Ending Stock *" unit="pcs" value={vals.stockEndSlim || ''} onChange={(val) => set('stockEndSlim', val)} />
             <AutoRow label="Sold Stock" value={`${fmtNum(soldSlim)} pcs`} note="From current shift" />
-            <ComputedRow label="Total Stock (pcs)" value={fmtNum(totalStockSlim)} formula="End + Sold − Beg" />
+            <ComputedRow label="Total Refilled Stock (pcs)" value={fmtNum(totalStockSlim)} formula="End + Sold − Beg" />
           </div>
         </div>
-        <div className="mr-total-bar"><span>Total Stock (pcs)</span><span className="mr-total-val">{fmtNum(totalStockPoly + totalStockSlim)} pcs</span></div>
+        <div className="mr-total-bar"><span>Total Refilled Stock (pcs)</span><span className="mr-total-val">{fmtNum(totalStockPoly + totalStockSlim)} pcs</span></div>
       </Section>
 
       <Section icon="water_drop" title="Refill (Bottles)">
@@ -285,7 +285,7 @@ export default function MeterReadingTab({ onGoToDaily }) {
 
       <Section icon="analytics" title="Actual Refilled & Meter (Liters)">
         <div className="mr-actual-breakdown">
-          <div className="mr-ab-row"><span>Sold Stock (pcs)</span><span className="mr-ab-val">{fmtNum(soldStockL)}</span></div>
+          <div className="mr-ab-row"><span>Total Refilled Stock (pcs)</span><span className="mr-ab-val">{fmtNum(soldStockL)}</span></div>
           <div className="mr-ab-row"><span>+ Refilled Bottles (L)</span><span className="mr-ab-val inv-num-green">{fmtNum(bottleTotal)}</span></div>
           <div className="mr-ab-row"><span>+ Refilled Gallon (L)</span><span className="mr-ab-val inv-num-green">{fmtNum(galTotal)}</span></div>
           <div className="mr-ab-row"><span>+ Other Products (L)</span><span className="mr-ab-val inv-num-green">{fmtNum(otherTotal)}</span></div>
