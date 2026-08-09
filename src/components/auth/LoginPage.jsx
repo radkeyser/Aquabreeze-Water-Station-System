@@ -4,14 +4,12 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import './auth.css';
 
 export default function LoginPage() {
-  const { session, authorized, loading, signInWithGoogle } = useAuth();
+  const { session, authorized, loading, deniedEmail, signInWithGoogle } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
   if (!loading && session && authorized) {
     return <Navigate to="/" replace />;
   }
-
-  const showDenied = !loading && !!session && !authorized;
 
   async function handleGoogleLogin() {
     setSubmitting(true);
@@ -31,10 +29,10 @@ export default function LoginPage() {
         <h1 className="auth-title">Aqua Breeze</h1>
         <p className="auth-sub">Water Station Management System</p>
 
-        {showDenied && (
+        {deniedEmail && (
           <div className="auth-denied">
             <span className="material-icons-outlined">block</span>
-            This Google account isn't authorized to access this system. Contact your administrator if this is a mistake.
+            <span><strong>{deniedEmail}</strong> isn't authorized to access this system. Contact your administrator if this is a mistake.</span>
           </div>
         )}
 
