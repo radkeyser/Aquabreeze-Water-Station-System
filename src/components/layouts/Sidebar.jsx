@@ -1,9 +1,11 @@
 import { NavLink } from 'react-router-dom';
-// use material icons for sidebar branding and NAV_ITEMS icons
 import clsx from 'clsx';
 import { NAV_ITEMS } from '../../config/navigation.js';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function Sidebar({ expanded = false, setExpanded = () => {} }) {
+  const { signOut } = useAuth();
+
   return (
     <aside
       id="sidebar"
@@ -34,6 +36,11 @@ export default function Sidebar({ expanded = false, setExpanded = () => {} }) {
           );
         })}
       </nav>
+
+      <button type="button" className="sidebar-btn sidebar-logout" onClick={signOut} style={{ marginTop: 'auto', marginBottom: 12, cursor: 'pointer', border: 'none', background: 'none', width: '100%' }}>
+        <span className="material-icons-outlined" style={{ fontSize: 22 }}>logout</span>
+        <span className="sidebar-label">Logout</span>
+      </button>
     </aside>
   );
 }
