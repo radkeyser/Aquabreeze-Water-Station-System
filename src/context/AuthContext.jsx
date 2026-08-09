@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(undefined); // undefined = not checked yet
   const [authorized, setAuthorized] = useState(null); // null = unknown
   const [checking, setChecking] = useState(false);
+  const [deniedEmail, setDeniedEmail] = useState(null);
 
   const checkAuthorized = useCallback(async (currentSession) => {
     if (!currentSession?.user?.email) {
@@ -22,9 +23,11 @@ export function AuthProvider({ children }) {
         .maybeSingle();
       if (error) throw error;
       if (data) {
+        setDeniedEmail(null);
         setAuthorized(true);
       } else {
         setAuthorized(false);
+        setDeniedEmail(currentSession.user.email);
         await supabase.auth.signOut();
       }
     } catch {
@@ -51,6 +54,7 @@ export function AuthProvider({ children }) {
   }, [checkAuthorized]);
 
   const signInWithGoogle = useCallback(async () => {
+    setDeniedEmail(null);
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
@@ -68,6 +72,7 @@ export function AuthProvider({ children }) {
     user: session?.user || null,
     authorized: !!authorized,
     loading,
+    deniedEmail,
     signInWithGoogle,
     signOut,
   };
