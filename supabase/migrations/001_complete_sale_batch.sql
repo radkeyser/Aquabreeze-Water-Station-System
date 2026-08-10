@@ -76,6 +76,7 @@ declare
   v_unpaid        numeric;
   v_gallon        numeric;
   v_dispenser     numeric;
+  v_gallon_type   text;
   v_pay_method    text;
   v_tx_id         text;
   v_staff_row     staff%rowtype;
@@ -333,7 +334,7 @@ begin
         v_borrow_id := public.next_id('BRW'::text);
         insert into borrowed (
           borrow_id, date, time, customer_id, customer_name,
-          gallon, dispenser, borrow_status, record_status
+          gallon, dispenser, borrow_status, record_status, gallon_type
         ) values (
           v_borrow_id,
           v_date,
@@ -343,11 +344,14 @@ begin
           coalesce((v_item->>'qty')::numeric, 0),
           0,
           'Borrowed',
-          'No'
+          'No',
+          nullif(v_item->>'slimPoly', '')
         );
 
         update customers
-        set gallon = gallon + coalesce((v_item->>'qty')::numeric, 0)
+        set gallon = gallon + coalesce((v_item->>'qty')::numeric, 0),
+            gallon_slim = gallon_slim + case when v_item->>'slimPoly' = 'Slim' then coalesce((v_item->>'qty')::numeric, 0) else 0 end,
+            gallon_poly = gallon_poly + case when v_item->>'slimPoly' = 'Poly' then coalesce((v_item->>'qty')::numeric, 0) else 0 end
         where customer_id = v_cust_row.customer_id;
       end if;
     end loop;
@@ -362,6 +366,7 @@ begin
     v_cust_name_key := lower(v_cust_name);
     v_gallon        := coalesce((v_borrow->>'gallon')::numeric, 0);
     v_dispenser     := coalesce((v_borrow->>'dispenser')::numeric, 0);
+    v_gallon_type   := nullif(v_borrow->>'gallonType', '');
 
     select * into v_cust_row
     from customers
@@ -378,7 +383,7 @@ begin
     v_borrow_id := public.next_id('BRW'::text);
     insert into borrowed (
       borrow_id, date, time, customer_id, customer_name,
-      gallon, dispenser, borrow_status, record_status
+      gallon, dispenser, borrow_status, record_status, gallon_type
     ) values (
       v_borrow_id,
       v_date,
@@ -388,7 +393,8 @@ begin
       v_gallon,
       v_dispenser,
       'Borrowed',
-      'No'
+      'No',
+      v_gallon_type
     );
 
     -- Cash drawer memo (zero amount)
@@ -415,8 +421,10 @@ begin
     -- Update customer gallon/dispenser counts
     update customers
     set
-      gallon    = gallon    + v_gallon,
-      dispenser = dispenser + v_dispenser
+      gallon      = gallon      + v_gallon,
+      dispenser   = dispenser   + v_dispenser,
+      gallon_slim = gallon_slim + case when v_gallon_type = 'Slim' then v_gallon else 0 end,
+      gallon_poly = gallon_poly + case when v_gallon_type = 'Poly' then v_gallon else 0 end
     where customer_id = v_cust_row.customer_id;
 
     v_results := v_results || jsonb_build_array(jsonb_build_object('success', true));

@@ -126,6 +126,7 @@ export function buildCheckoutPayload(cart, clientRequestId) {
     pointPerson: item.pointPerson || '',
     gallon: item.gallon || 0,
     dispenser: item.dispenser || 0,
+    gallonType: item.gallonType || '',
   }));
 
   return {

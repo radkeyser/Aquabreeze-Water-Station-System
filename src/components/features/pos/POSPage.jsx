@@ -38,9 +38,9 @@ function formatPeso(amount) {
   return '₱' + Number(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function buildBorrowLabel(gallon, dispenser) {
+function buildBorrowLabel(gallon, dispenser, gallonType) {
   const parts = [];
-  if (gallon > 0) parts.push(`Gallon x${gallon}`);
+  if (gallon > 0) parts.push(`Gallon${gallonType ? ` (${gallonType})` : ''} x${gallon}`);
   if (dispenser > 0) parts.push(`Dispenser x${dispenser}`);
   return parts.length ? parts.join(', ') : 'Borrow';
 }
@@ -266,6 +266,8 @@ function POSPageContent() {
     resetPanelFields();
   }
 
+  const borrowIsGallon = (selectedBorrow?.name || '').toLowerCase().includes('gallon');
+
   function closePanel() {
     setSelectedProduct(null);
     setSelectedBorrow(null);
@@ -350,19 +352,28 @@ function POSPageContent() {
     const isGallon = nameLower.includes('gallon');
     const isDispenser = nameLower.includes('dispenser');
 
+    if (isGallon && !slimPoly) {
+      showToast('Please select Slim or Poly.', { icon: 'error', highlightSelector: '#bdpSlimPolyField', type: 'error' });
+      return;
+    }
+
     setCart((current) => {
-      const existing = current.find((i) => i.isBorrow && i.customer === chosenCustomer.name);
+      // Gallon borrows are kept separate per Slim/Poly type, so they never
+      // merge into an existing row of the other type — Dispenser borrows
+      // (no type) still merge into any existing borrow row as before.
+      const existing = current.find((i) => i.isBorrow && i.customer === chosenCustomer.name
+        && (isGallon ? i.gallonType === slimPoly && !i.dispenser : !i.gallon));
       if (existing) {
         return current.map((i) => {
           if (i.id !== existing.id) return i;
           const gallon = (i.gallon || 0) + (isGallon ? qty : 0);
           const dispenser = (i.dispenser || 0) + (isDispenser ? qty : 0);
-          return { ...i, gallon, dispenser, qty: gallon + dispenser, productName: buildBorrowLabel(gallon, dispenser) };
+          return { ...i, gallon, dispenser, qty: gallon + dispenser, productName: buildBorrowLabel(gallon, dispenser, isGallon ? slimPoly : '') };
         });
       }
       const gallon = isGallon ? qty : 0;
       const dispenser = isDispenser ? qty : 0;
-      return [...current, { id: `${selectedBorrow.id}-${Date.now()}`, productId: selectedBorrow.id, productName: buildBorrowLabel(gallon, dispenser), qty: gallon + dispenser, gallon, dispenser, customer: chosenCustomer.name, location: chosenCustomer.location || '', pointPerson, total: 0, amountPaid: 0, status: 'Borrowed', isBorrow: true }];
+      return [...current, { id: `${selectedBorrow.id}-${Date.now()}`, productId: selectedBorrow.id, productName: buildBorrowLabel(gallon, dispenser, isGallon ? slimPoly : ''), qty: gallon + dispenser, gallon, dispenser, gallonType: isGallon ? slimPoly : '', customer: chosenCustomer.name, location: chosenCustomer.location || '', pointPerson, total: 0, amountPaid: 0, status: 'Borrowed', isBorrow: true }];
     });
 
     closePanel();
@@ -870,6 +881,16 @@ function POSPageContent() {
               <button type="button" className="qty-btn" id="bdpQtyPlus" onClick={() => setQuantity((q) => q + 1)}>+</button>
             </div>
           </div>
+
+          {borrowIsGallon && (
+            <div className="pdp-field" id="bdpSlimPolyField">
+              <label className="pdp-label">Container Type <span style={{ color: 'var(--destructive)' }}>*</span></label>
+              <div className="pdp-radio-group">
+                <label className="pdp-radio-label"><input type="radio" name="borrowSlimPoly" value="Slim" checked={slimPoly === 'Slim'} onChange={() => setSlimPoly('Slim')} /> Slim</label>
+                <label className="pdp-radio-label"><input type="radio" name="borrowSlimPoly" value="Poly" checked={slimPoly === 'Poly'} onChange={() => setSlimPoly('Poly')} /> Poly</label>
+              </div>
+            </div>
+          )}
 
           <button type="button" className="btn-primary" id="bdpAddToCart" style={{ background: 'hsl(38,70%,50%)', borderColor: 'hsl(38,70%,45%)' }} onClick={addBorrowToCart}>Record Borrow</button>
         </div>
