@@ -6,6 +6,7 @@ export const INV_BAG_SIZES = { '500 mL': 200, '1000 mL': 113, 'Slim Gallon': 1, 
 export const INV_LOW_STOCK = { '500 mL': 500, '1000 mL': 500, 'Slim Gallon': 10, 'Poly Gallon': 10 };
 export const OTHER_PRODUCTS = ['6L', '7L', '8L', '10L'];
 export const GALLON_TYPE_PRODUCTS = { 'Slim Gallon': 'Slim', 'Poly Gallon': 'Poly' };
+export const COOLER_BOX_SIZE = 40;
 
 const INV_PRODUCT_ID_MAP = {
   'PROD-000004': '500 mL',

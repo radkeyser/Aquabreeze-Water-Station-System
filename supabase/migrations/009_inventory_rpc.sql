@@ -19,7 +19,7 @@ begin
       record_id, date, product, beginning_bag, beginning_bottle,
       delivery_bottles, available, sales_bottle, borrowed, returned,
       expected, actual_bag, actual_bottle, total_actual, variance,
-      bag_size, timestamp
+      bag_size, timestamp, cooler_box, cooler_pcs, ice_maker_pcs
     ) values (
       v_record_id, p_date, v_prod,
       coalesce((v_data->>'begBag')::numeric, 0),
@@ -28,14 +28,17 @@ begin
       coalesce((v_data->>'available')::numeric, 0),
       coalesce((v_data->>'salesBtl')::numeric, 0),
       coalesce((v_data->>'borrowed')::numeric, 0),
-      coalesce((v_data->>'returned')::numeric, 0),
+      coalesce((v_data->>'returned'): :numeric, 0),
       coalesce((v_data->>'expected')::numeric, 0),
       coalesce((v_data->>'actualBag')::numeric, 0),
       coalesce((v_data->>'actualBtl')::numeric, 0),
       coalesce((v_data->>'totalActual')::numeric, 0),
       coalesce((v_data->>'variance')::numeric, 0),
       coalesce((v_data->>'bagSize')::numeric, 1),
-      v_now
+      v_now,
+      coalesce((v_data->>'coolerBox')::numeric, 0),
+      coalesce((v_data->>'coolerPcs')::numeric, 0),
+      coalesce((v_data->>'iceMakerPcs')::numeric, 0)
     );
   end loop;
 

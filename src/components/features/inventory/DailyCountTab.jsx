@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getDailyInventoryFormData, saveDailyInventory, INV_PRODUCTS, INV_BAG_SIZES, GALLON_TYPE_PRODUCTS, fmtNum } from '../../../api/inventory.js';
+import { getDailyInventoryFormData, saveDailyInventory, INV_PRODUCTS, INV_BAG_SIZES, GALLON_TYPE_PRODUCTS, COOLER_BOX_SIZE, fmtNum } from '../../../api/inventory.js';
 import { showToast as notify } from '../../../utils/toast.js';
 
 function ConfRow({ label, val, bold }) {
@@ -43,6 +43,10 @@ export default function DailyCountTab() {
 
     const actBag = isGallonType ? 0 : getVal(`${prod}_actualBag`);
     const actBtl = getVal(`${prod}_actualBtl`);
+    const isCooledProduct = prod === '1000 mL';
+    const coolerBox = isCooledProduct ? getVal(`${prod}_coolerBox`) : 0;
+    const coolerPcs = isCooledProduct ? getVal(`${prod}_coolerPcs`) : 0;
+    const iceMakerPcs = isCooledProduct ? getVal(`${prod}_iceMakerPcs`) : 0;
 
     let available, expected, totalActual;
     if (isGallonType) {
@@ -52,17 +56,22 @@ export default function DailyCountTab() {
     } else {
       available = begBag * bagSize + begBtl + delBag;
       expected = available - salesBtl;
-      totalActual = actBag * bagSize + actBtl;
+      totalActual = actBag * bagSize + actBtl + (coolerBox * COOLER_BOX_SIZE) + coolerPcs + iceMakerPcs;
     }
     const variance = totalActual - expected;
 
-    products[prod] = { bagSize, isSlim: isGallonType, begBag, begBtl, delBag, salesBtl, borrowed, returned, actBag, actBtl, available, expected, totalActual, variance };
+    products[prod] = { bagSize, isSlim: isGallonType, isCooledProduct, begBag, begBtl, delBag, salesBtl, borrowed, returned, actBag, actBtl, coolerBox, coolerPcs, iceMakerPcs, available, expected, totalActual, variance };
   });
 
   function allFilled() {
     return INV_PRODUCTS.every((p) => {
       if (GALLON_TYPE_PRODUCTS[p]) return values[`${p}_actualBtl`] !== undefined && values[`${p}_actualBtl`] !== '';
-      return values[`${p}_actualBag`] !== undefined && values[`${p}_actualBag`] !== '' && values[`${p}_actualBtl`] !== undefined && values[`${p}_actualBtl`] !== '';
+      const baseOk = values[`${p}_actualBag`] !== undefined && values[`${p}_actualBag`] !== '' && values[`${p}_actualBtl`] !== undefined && values[`${p}_actualBtl`] !== '';
+      if (p !== '1000 mL') return baseOk;
+      return baseOk
+        && values[`${p}_coolerBox`] !== undefined && values[`${p}_coolerBox`] !== ''
+        && values[`${p}_coolerPcs`] !== undefined && values[`${p}_coolerPcs`] !== ''
+        && values[`${p}_iceMakerPcs`] !== undefined && values[`${p}_iceMakerPcs`] !== '';
     });
   }
 
@@ -81,6 +90,7 @@ export default function DailyCountTab() {
         borrowed: d.borrowed, returned: d.returned, available: d.available, expected: d.expected,
         actualBag: d.isSlim ? 0 : d.actBag, actualBtl: d.actBtl, totalActual: d.totalActual,
         variance: d.variance, bagSize: d.bagSize,
+        coolerBox: d.coolerBox || 0, coolerPcs: d.coolerPcs || 0, iceMakerPcs: d.iceMakerPcs || 0,
       };
     });
     try {
@@ -141,7 +151,14 @@ export default function DailyCountTab() {
                     <ConfRow label="− Sales" val={`${d.salesBtl} btl`} />
                     <ConfRow label="Expected Ending" val={`${d.expected} btl`} bold />
                     <ConfRow label="Actual Ending (Bags)" val={`${d.actBag} bags`} />
-                    <ConfRow label="Actual Ending (Btl)" val={`${d.actBtl} btl`} />
+                    <ConfRow label="Actual Ending (Tray Btl)" val={`${d.actBtl} btl`} />
+                    {d.isCooledProduct && (
+                      <>
+                        <ConfRow label="Cooler (Box of 40)" val={`${d.coolerBox} box`} />
+                        <ConfRow label="Cooler (Loose Pcs)" val={`${d.coolerPcs} btl`} />
+                        <ConfRow label="Ice Maker (Pcs)" val={`${d.iceMakerPcs} btl`} />
+                      </>
+                    )}
                     <ConfRow label="Total Actual Ending" val={`${d.totalActual} btl`} bold />
                   </>
                 )}
@@ -220,7 +237,14 @@ export default function DailyCountTab() {
                 {!isSlim && (
                   <ManualField label="Actual Ending (Bags)" unit="bags" value={values[`${prod}_actualBag`] || ''} onChange={(v) => setVal(`${prod}_actualBag`, v)} />
                 )}
-                <ManualField label={isSlim ? 'Actual Ending (Gallon)' : 'Actual Ending (Bottles)'} unit={isSlim ? 'gal' : 'btl'} value={values[`${prod}_actualBtl`] || ''} onChange={(v) => setVal(`${prod}_actualBtl`, v)} />
+                <ManualField label={isSlim ? 'Actual Ending (Gallon)' : 'Actual Ending (Tray Bottles)'} unit={isSlim ? 'gal' : 'btl'} value={values[`${prod}_actualBtl`] || ''} onChange={(v) => setVal(`${prod}_actualBtl`, v)} />
+                {prod === '1000 mL' && (
+                  <>
+                    <ManualField label="Cooler (Box of 40)" unit="box" value={values[`${prod}_coolerBox`] || ''} onChange={(v) => setVal(`${prod}_coolerBox`, v)} />
+                    <ManualField label="Cooler (Loose Pcs)" unit="btl" value={values[`${prod}_coolerPcs`] || ''} onChange={(v) => setVal(`${prod}_coolerPcs`, v)} />
+                    <ManualField label="Ice Maker (Pcs)" unit="btl" value={values[`${prod}_iceMakerPcs`] || ''} onChange={(v) => setVal(`${prod}_iceMakerPcs`, v)} />
+                  </>
+                )}
                 <div className="inv-daily-result">
                   <div className="inv-result-row"><span>Total Actual</span><span className="inv-result-val">{fmtNum(d.totalActual)}</span></div>
                   <div className="inv-result-row inv-variance-result">
