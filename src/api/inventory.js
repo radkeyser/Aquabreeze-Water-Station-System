@@ -31,15 +31,23 @@ export async function getActiveShiftId() {
 async function getLastDailyInventory(product) {
   const { data, error } = await supabase
     .from('daily_inventory')
-    .select('actual_bag,actual_bottle,total_actual,date')
+    .select('actual_bag,actual_bottle,total_actual,cooler_box,cooler_pcs,ice_maker_pcs,date')
     .eq('product', product)
     .order('date', { ascending: false })
     .limit(1);
   if (error) throw error;
   const row = data?.[0];
   return row
-    ? { actualBag: Number(row.actual_bag) || 0, actualBottles: Number(row.actual_bottle) || 0, totalActual: Number(row.total_actual) || 0, date: row.date }
-    : { actualBag: 0, actualBottles: 0, totalActual: 0, date: '' };
+    ? {
+        actualBag: Number(row.actual_bag) || 0,
+        actualBottles: Number(row.actual_bottle) || 0,
+        totalActual: Number(row.total_actual) || 0,
+        coolerBox: Number(row.cooler_box) || 0,
+        coolerPcs: Number(row.cooler_pcs) || 0,
+        iceMakerPcs: Number(row.ice_maker_pcs) || 0,
+        date: row.date,
+      }
+    : { actualBag: 0, actualBottles: 0, totalActual: 0, coolerBox: 0, coolerPcs: 0, iceMakerPcs: 0, date: '' };
 }
 
 async function getPendingSalesByProduct() {

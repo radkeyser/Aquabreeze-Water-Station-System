@@ -33,8 +33,12 @@ export default function DailyCountTab() {
     const bagSize = INV_BAG_SIZES[prod];
     const isGallonType = !!GALLON_TYPE_PRODUCTS[prod];
     const prev = formData.previous[prod] || {};
+    const isCooledProduct = prod === '1000 mL';
     const begBag = isGallonType ? (prev.totalActual || 0) : (prev.actualBag || 0);
     const begBtl = prev.actualBottles || 0;
+    const begCoolerBox = isCooledProduct ? (prev.coolerBox || 0) : 0;
+    const begCoolerPcs = isCooledProduct ? (prev.coolerPcs || 0) : 0;
+    const begIceMakerPcs = isCooledProduct ? (prev.iceMakerPcs || 0) : 0;
     const delBag = formData.deliveries[prod] || 0;
     const salesBtl = formData.sales[prod] || 0;
     const typeBorrow = isGallonType ? (formData.borrowed[prod] || {}) : {};
@@ -43,7 +47,6 @@ export default function DailyCountTab() {
 
     const actBag = isGallonType ? 0 : getVal(`${prod}_actualBag`);
     const actBtl = getVal(`${prod}_actualBtl`);
-    const isCooledProduct = prod === '1000 mL';
     const coolerBox = isCooledProduct ? getVal(`${prod}_coolerBox`) : 0;
     const coolerPcs = isCooledProduct ? getVal(`${prod}_coolerPcs`) : 0;
     const iceMakerPcs = isCooledProduct ? getVal(`${prod}_iceMakerPcs`) : 0;
@@ -54,13 +57,14 @@ export default function DailyCountTab() {
       expected = available - salesBtl - borrowed + returned;
       totalActual = actBtl;
     } else {
-      available = begBag * bagSize + begBtl + delBag;
+      const begCoolerTotal = (begCoolerBox * COOLER_BOX_SIZE) + begCoolerPcs + begIceMakerPcs;
+      available = begBag * bagSize + begBtl + begCoolerTotal + delBag;
       expected = available - salesBtl;
       totalActual = actBag * bagSize + actBtl + (coolerBox * COOLER_BOX_SIZE) + coolerPcs + iceMakerPcs;
     }
     const variance = totalActual - expected;
 
-    products[prod] = { bagSize, isSlim: isGallonType, isCooledProduct, begBag, begBtl, delBag, salesBtl, borrowed, returned, actBag, actBtl, coolerBox, coolerPcs, iceMakerPcs, available, expected, totalActual, variance };
+    products[prod] = { bagSize, isSlim: isGallonType, isCooledProduct, begBag, begBtl, begCoolerBox, begCoolerPcs, begIceMakerPcs, delBag, salesBtl, borrowed, returned, actBag, actBtl, coolerBox, coolerPcs, iceMakerPcs, available, expected, totalActual, variance };
   });
 
   function allFilled() {
@@ -215,7 +219,14 @@ export default function DailyCountTab() {
                 ) : (
                   <>
                     <AutoField label="Beg. Inv. (Bags)" value={`${fmtNum(d.begBag)} bags`} note="Last ending" />
-                    <AutoField label="Beg. Inv. (Bottles)" value={`${fmtNum(d.begBtl)} btl`} note="Last ending" />
+                    <AutoField label="Beg. Inv. (Tray Bottles)" value={`${fmtNum(d.begBtl)} btl`} note="Last ending" />
+                    {prod === '1000 mL' && (
+                      <>
+                        <AutoField label="Beg. Cooler (Box of 40)" value={`${fmtNum(d.begCoolerBox)} box`} note="Last ending" />
+                        <AutoField label="Beg. Cooler (Loose Pcs)" value={`${fmtNum(d.begCoolerPcs)} btl`} note="Last ending" />
+                        <AutoField label="Beg. Ice Maker (Pcs)" value={`${fmtNum(d.begIceMakerPcs)} btl`} note="Last ending" />
+                      </>
+                    )}
                     <AutoField label="+ Delivery (Bottles)" value={`${fmtNum(d.delBag)} btl`} note="Today" />
                     <AutoField label="− Sales (Bottles)" value={`${fmtNum(d.salesBtl)} btl`} note="Today" />
                   </>
