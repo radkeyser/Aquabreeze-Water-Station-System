@@ -306,6 +306,65 @@
 .customers-paginator button:disabled { opacity: 0.4; cursor: not-allowed; }
 .customers-paginator button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.pagination-info { font-size: 13px; color: var(--muted-fg); }
+.pagination-right { display: flex; align-items: center; gap: 8px; }
+.pg-size-select {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 13px;
+  background: var(--card);
+  color: var(--fg);
+}
+.pg-nav-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.pg-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pg-nav-btn .material-icons-outlined { font-size: 18px; }
+.pg-page-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted-fg);
+}
+.pg-page-input {
+  width: 48px;
+  padding: 5px 6px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 13px;
+  background: var(--card);
+  color: var(--fg);
+}
+.paginator-ellipsis {
+  min-width: 20px;
+  text-align: center;
+  color: var(--muted-fg);
+  font-weight: 700;
+  user-select: none;
+}
+
 .order-payments { padding: 10px 16px; background: var(--card); }
 .order-payments-title {
   display: flex;

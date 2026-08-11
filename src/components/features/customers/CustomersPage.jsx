@@ -19,7 +19,6 @@ import { formatPeso } from '../../../utils/format.js';
 import './customers.css';
 import '../../../index.css';
 
-const PAGE_SIZE = 10;
 const SORT_COLS = ['name', 'location', 'pointPerson', 'gallon', 'dispenser', 'utang', 'status'];
 
 function customerPayload(c) {
@@ -77,6 +76,7 @@ export default function CustomersPage() {
   const [sortCol, setSortCol] = useState('');
   const [sortDir, setSortDir] = useState(1);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const [massEditMode, setMassEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -160,15 +160,14 @@ export default function CustomersPage() {
   }, [customers, searchQ, ppFilter, statusFilter, sortCol, sortDir]);
 
   const isFiltering = !!(searchQ.trim() || ppFilter || statusFilter);
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageData = useMemo(() => {
-    if (isFiltering) return filtered;
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, isFiltering, currentPage]);
+    const start = (currentPage - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, currentPage, pageSize]);
 
-  useEffect(() => { setPage(1); }, [searchQ, ppFilter, statusFilter, sortCol, sortDir]);
+  useEffect(() => { setPage(1); }, [searchQ, ppFilter, statusFilter, sortCol, sortDir, pageSize]);
 
   function toggleSort(col) {
     if (sortCol === col) setSortDir((d) => d * -1);
@@ -178,6 +177,24 @@ export default function CustomersPage() {
   function sortIcon(col) {
     if (sortCol !== col) return '↕';
     return sortDir === 1 ? '↑' : '↓';
+  }
+
+  function getPageNumbers(current, total) {
+    const pages = [];
+    const windowSize = 1;
+    const range = new Set([1, total, current]);
+    for (let i = 1; i <= windowSize; i++) {
+      range.add(current - i);
+      range.add(current + i);
+    }
+    const sorted = [...range].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+    let prev = 0;
+    for (const n of sorted) {
+      if (prev && n - prev > 1) pages.push('…');
+      pages.push(n);
+      prev = n;
+    }
+    return pages;
   }
 
   function exitMassEdit() {
@@ -668,13 +685,53 @@ export default function CustomersPage() {
             </tbody>
           </table>
         </div>
-        {!isFiltering && !loading && filtered.length > PAGE_SIZE && (
-          <div className="customers-paginator" id="pg-customers">
-            <button type="button" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>‹</button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-              <button key={n} type="button" className={n === currentPage ? 'active' : ''} onClick={() => setPage(n)}>{n}</button>
-            ))}
-            <button type="button" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>›</button>
+        {!loading && filtered.length > 0 && (
+          <div id="pg-customers" className="pagination-bar">
+            <div className="pagination-info">
+              Showing {(currentPage - 1) * pageSize + 1}–{Math.min(filtered.length, currentPage * pageSize)} of {filtered.length} results
+            </div>
+            <div className="pagination-right">
+              <select
+                className="pg-size-select"
+                id="pg-customers-size"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+              >
+                {[10, 25, 50, 100].map((size) => (
+                  <option key={size} value={size}>{size} / page</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                className="pg-nav-btn"
+                id="pg-customers-prev"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <span className="material-icons-outlined">chevron_left</span>
+              </button>
+              <div className="pg-page-input-wrap">
+                <input
+                  type="number"
+                  className="pg-page-input"
+                  id="pg-customers-input"
+                  value={currentPage}
+                  min={1}
+                  max={totalPages}
+                  onChange={(e) => setPage(Math.min(totalPages, Math.max(1, Number(e.target.value))))}
+                />
+                <span className="pg-total-pages">of {totalPages}</span>
+              </div>
+              <button
+                type="button"
+                className="pg-nav-btn"
+                id="pg-customers-next"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <span className="material-icons-outlined">chevron_right</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
