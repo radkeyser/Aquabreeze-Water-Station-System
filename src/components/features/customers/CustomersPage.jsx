@@ -101,7 +101,7 @@ export default function CustomersPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [borrowData, setBorrowData] = useState(null);
   const [borrowLoading, setBorrowLoading] = useState(false);
-  const [returnGallon, setReturnGallon] = useState(0);
+  const [returnAmounts, setReturnAmounts] = useState({});
   const [returnDispenser, setReturnDispenser] = useState(0);
   const [payOrderId, setPayOrderId] = useState(null);
   const [payDebt, setPayDebt] = useState(0);
@@ -377,28 +377,45 @@ export default function CustomersPage() {
     }
   }
 
-  function openReturnForm(gallon, dispenser) {
-    setReturnGallon(gallon);
-    setReturnDispenser(dispenser);
+  function openReturnForm() {
+    const initial = {};
+    (borrowData?.gallonBuckets || []).forEach((b) => { initial[b.type] = 0; });
+    setReturnAmounts(initial);
+    setReturnDispenser(0);
     setBorrowReturnMode(true);
   }
 
   async function confirmReturn() {
     if (!activeCustomer) return;
-    if (returnGallon <= 0 && returnDispenser <= 0) {
+    const bucketEntries = Object.entries(returnAmounts).filter(([, v]) => v > 0);
+    if (!bucketEntries.length && returnDispenser <= 0) {
       showToast('Please enter a return quantity of at least 1.', { type: 'error' });
       return;
     }
     setSubmitting(true);
     try {
-      const result = await processReturn({
-        customerId: activeCustomer.id,
-        customerName: activeCustomer.name,
-        returnGallon,
-        returnDispenser,
-      });
-      if (result?.success === false) throw new Error(result.message);
-      showToast(result?.message || 'Return recorded!', { type: 'success' });
+      // Each gallon type is its own transaction — a Slim return and a Poly
+      // return are conceptually separate borrowed-row events, not one row.
+      for (const [gallonType, amount] of bucketEntries) {
+        const result = await processReturn({
+          customerId: activeCustomer.id,
+          customerName: activeCustomer.name,
+          returnGallon: amount,
+          returnDispenser: 0,
+          gallonType: gallonType === 'Unknown' ? '' : gallonType,
+        });
+        if (result?.success === false) throw new Error(result.message);
+      }
+      if (returnDispenser > 0) {
+        const result = await processReturn({
+          customerId: activeCustomer.id,
+          customerName: activeCustomer.name,
+          returnGallon: 0,
+          returnDispenser,
+        });
+        if (result?.success === false) throw new Error(result.message);
+      }
+      showToast('Return recorded!', { type: 'success' });
       setBorrowOpen(false);
       await reload();
     } catch (err) {
@@ -988,19 +1005,19 @@ export default function CustomersPage() {
                   <div className="customer-orders-total">
                     <span>Currently Borrowed</span>
                     <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      {borrowData?.currentGallon > 0 && (
-                        <span className="borrow-badge borrow-badge-gallon" style={{ fontSize: 14 }}>
+                      {borrowData?.gallonBuckets?.map((b) => (
+                        <span key={b.type} className="borrow-badge borrow-badge-gallon" style={{ fontSize: 14 }}>
                           <span className="material-icons-outlined">water_drop</span>
-                          {borrowData.currentGallon} Gallon(s) out
+                          {b.currentTotal} {b.type === 'Unknown' ? 'Gallon' : `${b.type} Gallon`}(s) out
                         </span>
-                      )}
+                      ))}
                       {borrowData?.currentDispenser > 0 && (
                         <span className="borrow-badge borrow-badge-dispenser" style={{ fontSize: 14 }}>
                           <span className="material-icons-outlined">inventory_2</span>
                           {borrowData.currentDispenser} Dispenser(s) out
                         </span>
                       )}
-                      {!borrowData?.currentGallon && !borrowData?.currentDispenser && (
+                      {!(borrowData?.gallonBuckets?.length) && !borrowData?.currentDispenser && (
                         <span style={{ color: 'hsl(var(--muted-fg))', fontSize: 14 }}>All returned</span>
                       )}
                     </span>
@@ -1008,39 +1025,50 @@ export default function CustomersPage() {
                 </div>
                 <div id="borrowHistoryBody" style={{ maxHeight: 420, overflowY: 'auto', padding: '0 20px 20px' }}>
                   {borrowLoading && <div style={{ padding: 40, textAlign: 'center' }}>Loading...</div>}
-                  {!borrowLoading && (!borrowData?.borrows?.length) && (
+                  {!borrowLoading && !(borrowData?.gallonBuckets?.some((b) => b.borrows.length) || borrowData?.dispenserBorrows?.length) && (
                     <div style={{ padding: 40, textAlign: 'center', color: 'hsl(var(--muted-fg))' }}>No outstanding borrowed items</div>
                   )}
-                  {!borrowLoading && borrowData?.borrows?.map((b) => (
+                  {!borrowLoading && borrowData?.gallonBuckets?.map((bucket) => bucket.borrows.map((b) => (
                     <div key={b.borrowId} className="order-card">
                       <div className="order-card-header">
                         <div className="order-card-left">
                           <div className="order-card-id">{b.borrowId}</div>
-                          <div className="order-card-meta">{b.date}</div>
+                          <div className="order-card-meta">{b.date}{bucket.type !== 'Unknown' ? ` · ${bucket.type}` : ''}</div>
                         </div>
                         <button
                           type="button"
                           className="pay-btn order-pay-btn borrow-return-trigger"
-                          onClick={() => openReturnForm(b.remainingGallon, b.remainingDispenser)}
+                          onClick={openReturnForm}
                         >
                           <span className="material-icons-outlined">undo</span> Return
                         </button>
                       </div>
                       <div className="order-card-details">
-                        {b.originalGallon > 0 && (
-                          <>
-                            <div className="order-card-detail"><div className="order-detail-label">Gallon Borrowed</div><div className="order-detail-val">{b.originalGallon}</div></div>
-                            {b.returnedGallon > 0 && <div className="order-card-detail"><div className="order-detail-label">Already Returned</div><div className="order-detail-val text-success">{b.returnedGallon}</div></div>}
-                            <div className="order-card-detail"><div className="order-detail-label">Still Out</div><div className="order-detail-val text-danger text-bold">{b.remainingGallon}</div></div>
-                          </>
-                        )}
-                        {b.originalDispenser > 0 && (
-                          <>
-                            <div className="order-card-detail"><div className="order-detail-label">Dispenser Borrowed</div><div className="order-detail-val">{b.originalDispenser}</div></div>
-                            {b.returnedDispenser > 0 && <div className="order-card-detail"><div className="order-detail-label">Already Returned</div><div className="order-detail-val text-success">{b.returnedDispenser}</div></div>}
-                            <div className="order-card-detail"><div className="order-detail-label">Still Out</div><div className="order-detail-val text-danger text-bold">{b.remainingDispenser}</div></div>
-                          </>
-                        )}
+                        <div className="order-card-detail"><div className="order-detail-label">{bucket.type === 'Unknown' ? 'Gallon' : `${bucket.type} Gallon`} Borrowed</div><div className="order-detail-val">{b.original}</div></div>
+                        {b.returned > 0 && <div className="order-card-detail"><div className="order-detail-label">Already Returned</div><div className="order-detail-val text-success">{b.returned}</div></div>}
+                        <div className="order-card-detail"><div className="order-detail-label">Still Out</div><div className="order-detail-val text-danger text-bold">{b.remaining}</div></div>
+                      </div>
+                    </div>
+                  )))}
+                  {!borrowLoading && borrowData?.dispenserBorrows?.map((b) => (
+                    <div key={b.borrowId} className="order-card">
+                      <div className="order-card-header">
+                        <div className="order-card-left">
+                          <div className="order-card-id">{b.borrowId}</div>
+                          <div className="order-card-meta">{b.date} · Dispenser</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="pay-btn order-pay-btn borrow-return-trigger"
+                          onClick={openReturnForm}
+                        >
+                          <span className="material-icons-outlined">undo</span> Return
+                        </button>
+                      </div>
+                      <div className="order-card-details">
+                        <div className="order-card-detail"><div className="order-detail-label">Dispenser Borrowed</div><div className="order-detail-val">{b.original}</div></div>
+                        {b.returned > 0 && <div className="order-card-detail"><div className="order-detail-label">Already Returned</div><div className="order-detail-val text-success">{b.returned}</div></div>}
+                        <div className="order-card-detail"><div className="order-detail-label">Still Out</div><div className="order-detail-val text-danger text-bold">{b.remaining}</div></div>
                       </div>
                     </div>
                   ))}
@@ -1056,21 +1084,28 @@ export default function CustomersPage() {
                   <div style={{ fontSize: 15, fontWeight: 700 }}>{activeCustomer.name}</div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: 'hsl(var(--muted-fg))', marginLeft: 'auto' }}>Record Return</div>
                 </div>
-                {returnGallon > 0 && (
-                  <div className="pdp-field" style={{ gap: 10 }}>
+                {borrowData?.gallonBuckets?.filter((b) => b.currentTotal > 0).map((bucket) => (
+                  <div key={bucket.type} className="pdp-field" style={{ gap: 10 }}>
                     <label className="pdp-label" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                       <span className="material-icons-outlined" style={{ fontSize: 15, color: 'hsl(210,60%,50%)' }}>water_drop</span>
-                      GALLONS TO RETURN
+                      {(bucket.type === 'Unknown' ? 'GALLONS' : `${bucket.type.toUpperCase()} GALLONS`)} TO RETURN
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <button type="button" className="qty-btn" onClick={() => setReturnGallon((v) => Math.max(0, v - 1))}>−</button>
-                      <input type="number" className="pdp-qty-input" value={returnGallon} min={0} max={returnGallon} onChange={(e) => setReturnGallon(Math.min(returnGallon, Math.max(0, Number(e.target.value) || 0)))} />
-                      <button type="button" className="qty-btn" onClick={() => setReturnGallon((v) => Math.min(returnGallon, v + 1))}>+</button>
-                      <span style={{ fontSize: 12, color: 'hsl(var(--muted-fg))' }}>of <strong>{returnGallon}</strong> out</span>
+                      <button type="button" className="qty-btn" onClick={() => setReturnAmounts((prev) => ({ ...prev, [bucket.type]: Math.max(0, (prev[bucket.type] || 0) - 1) }))}>−</button>
+                      <input
+                        type="number"
+                        className="pdp-qty-input"
+                        value={returnAmounts[bucket.type] || 0}
+                        min={0}
+                        max={bucket.currentTotal}
+                        onChange={(e) => setReturnAmounts((prev) => ({ ...prev, [bucket.type]: Math.min(bucket.currentTotal, Math.max(0, Number(e.target.value) || 0)) }))}
+                      />
+                      <button type="button" className="qty-btn" onClick={() => setReturnAmounts((prev) => ({ ...prev, [bucket.type]: Math.min(bucket.currentTotal, (prev[bucket.type] || 0) + 1) }))}>+</button>
+                      <span style={{ fontSize: 12, color: 'hsl(var(--muted-fg))' }}>of <strong>{bucket.currentTotal}</strong> out</span>
                     </div>
                   </div>
-                )}
-                {returnDispenser > 0 && (
+                ))}
+                {borrowData?.currentDispenser > 0 && (
                   <div className="pdp-field" style={{ gap: 10 }}>
                     <label className="pdp-label" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                       <span className="material-icons-outlined" style={{ fontSize: 15, color: 'hsl(38,65%,45%)' }}>inventory_2</span>
@@ -1078,9 +1113,9 @@ export default function CustomersPage() {
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <button type="button" className="qty-btn" onClick={() => setReturnDispenser((v) => Math.max(0, v - 1))}>−</button>
-                      <input type="number" className="pdp-qty-input" value={returnDispenser} min={0} max={returnDispenser} onChange={(e) => setReturnDispenser(Math.min(returnDispenser, Math.max(0, Number(e.target.value) || 0)))} />
-                      <button type="button" className="qty-btn" onClick={() => setReturnDispenser((v) => Math.min(returnDispenser, v + 1))}>+</button>
-                      <span style={{ fontSize: 12, color: 'hsl(var(--muted-fg))' }}>of <strong>{returnDispenser}</strong> out</span>
+                      <input type="number" className="pdp-qty-input" value={returnDispenser} min={0} max={borrowData.currentDispenser} onChange={(e) => setReturnDispenser(Math.min(borrowData.currentDispenser, Math.max(0, Number(e.target.value) || 0)))} />
+                      <button type="button" className="qty-btn" onClick={() => setReturnDispenser((v) => Math.min(borrowData.currentDispenser, v + 1))}>+</button>
+                      <span style={{ fontSize: 12, color: 'hsl(var(--muted-fg))' }}>of <strong>{borrowData.currentDispenser}</strong> out</span>
                     </div>
                   </div>
                 )}

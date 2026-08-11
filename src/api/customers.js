@@ -190,73 +190,78 @@ export async function getCustomerOrders(customerName, customerId) {
   return orders;
 }
 
+function matchReturnsFifo(borrowRows, returnRows) {
+  let pool = 0;
+  returnRows.forEach((r) => { pool += Math.abs(r.amount); });
+
+  const result = [];
+  borrowRows.forEach((b) => {
+    let remaining = b.amount;
+    if (pool > 0 && remaining > 0) {
+      const d = Math.min(pool, remaining);
+      remaining -= d;
+      pool -= d;
+    }
+    const returned = b.amount - remaining;
+    if (remaining === 0) return;
+    result.push({
+      borrowId: b.borrowId,
+      date: b.date,
+      original: b.amount,
+      returned,
+      remaining,
+    });
+  });
+  return result;
+}
+
 export async function getCustomerBorrows(customerId) {
   const [borrowRes, custRes] = await Promise.all([
     supabase.from('borrowed').select('*').eq('customer_id', customerId),
-    supabase.from('customers').select('gallon,dispenser').eq('customer_id', customerId).maybeSingle(),
+    supabase.from('customers').select('gallon,gallon_slim,gallon_poly,dispenser').eq('customer_id', customerId).maybeSingle(),
   ]);
 
   if (borrowRes.error) throw borrowRes.error;
   if (custRes.error) throw custRes.error;
 
-  const currentGallon = Number(custRes.data?.gallon) || 0;
   const currentDispenser = Number(custRes.data?.dispenser) || 0;
+  const currentGallonSlim = Number(custRes.data?.gallon_slim) || 0;
+  const currentGallonPoly = Number(custRes.data?.gallon_poly) || 0;
+  // Historical borrows predating the Slim/Poly split have no gallon_type —
+  // their outstanding amount isn't reflected in gallon_slim/gallon_poly,
+  // so surface it separately rather than silently losing it.
+  const currentGallonUnknown = Math.max(0, (Number(custRes.data?.gallon) || 0) - currentGallonSlim - currentGallonPoly);
 
-  const borrowRows = [];
-  const returnRows = [];
+  const rowsByBucket = { Slim: { borrow: [], return: [] }, Poly: { borrow: [], return: [] }, Unknown: { borrow: [], return: [] } };
+  const dispenserRows = { borrow: [], return: [] };
 
   (borrowRes.data || []).forEach((row) => {
-    const obj = {
-      borrowId: String(row.borrow_id),
-      date: formatDate(row.date),
-      gallon: Number(row.gallon) || 0,
-      dispenser: Number(row.dispenser) || 0,
-      status: String(row.borrow_status || ''),
-    };
-    if (obj.status === 'Returned') returnRows.push(obj);
-    else borrowRows.push(obj);
-  });
+    const status = String(row.borrow_status || '');
+    const isReturn = status === 'Returned';
+    const gallonAmt = Number(row.gallon) || 0;
+    const dispenserAmt = Number(row.dispenser) || 0;
+    const bucketKey = row.gallon_type === 'Slim' ? 'Slim' : row.gallon_type === 'Poly' ? 'Poly' : 'Unknown';
 
-  let returnPoolGallon = 0;
-  let returnPoolDispenser = 0;
-  returnRows.forEach((r) => {
-    returnPoolGallon += Math.abs(r.gallon);
-    returnPoolDispenser += Math.abs(r.dispenser);
-  });
-
-  const result = [];
-  borrowRows.forEach((b) => {
-    let remainingGallon = b.gallon;
-    let remainingDispenser = b.dispenser;
-
-    if (returnPoolGallon > 0 && remainingGallon > 0) {
-      const d = Math.min(returnPoolGallon, remainingGallon);
-      remainingGallon -= d;
-      returnPoolGallon -= d;
+    if (gallonAmt !== 0) {
+      const bucket = rowsByBucket[bucketKey];
+      const obj = { borrowId: String(row.borrow_id), date: formatDate(row.date), amount: Math.abs(gallonAmt) };
+      (isReturn ? bucket.return : bucket.borrow).push(obj);
     }
-    if (returnPoolDispenser > 0 && remainingDispenser > 0) {
-      const dd = Math.min(returnPoolDispenser, remainingDispenser);
-      remainingDispenser -= dd;
-      returnPoolDispenser -= dd;
+    if (dispenserAmt !== 0) {
+      const obj = { borrowId: String(row.borrow_id), date: formatDate(row.date), amount: Math.abs(dispenserAmt) };
+      (isReturn ? dispenserRows.return : dispenserRows.borrow).push(obj);
     }
-
-    const returnedGallon = b.gallon - remainingGallon;
-    const returnedDispenser = b.dispenser - remainingDispenser;
-    if (remainingGallon === 0 && remainingDispenser === 0) return;
-
-    result.push({
-      borrowId: b.borrowId,
-      date: b.date,
-      originalGallon: b.gallon,
-      originalDispenser: b.dispenser,
-      returnedGallon,
-      returnedDispenser,
-      remainingGallon,
-      remainingDispenser,
-    });
   });
 
-  return { borrows: result, currentGallon, currentDispenser };
+  const gallonBuckets = [
+    { type: 'Slim', currentTotal: currentGallonSlim, borrows: matchReturnsFifo(rowsByBucket.Slim.borrow, rowsByBucket.Slim.return) },
+    { type: 'Poly', currentTotal: currentGallonPoly, borrows: matchReturnsFifo(rowsByBucket.Poly.borrow, rowsByBucket.Poly.return) },
+    { type: 'Unknown', currentTotal: currentGallonUnknown, borrows: matchReturnsFifo(rowsByBucket.Unknown.borrow, rowsByBucket.Unknown.return) },
+  ].filter((b) => b.currentTotal > 0 || b.borrows.length > 0);
+
+  const dispenserBorrows = matchReturnsFifo(dispenserRows.borrow, dispenserRows.return);
+
+  return { gallonBuckets, dispenserBorrows, currentDispenser };
 }
 
 export { getShiftStatus, getDeliveryBoys } from './pautang.js';
