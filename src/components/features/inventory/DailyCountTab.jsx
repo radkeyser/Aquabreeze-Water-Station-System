@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getDailyInventoryFormData, saveDailyInventory, INV_PRODUCTS, INV_BAG_SIZES, fmtNum } from '../../../api/inventory.js';
+import { getDailyInventoryFormData, saveDailyInventory, INV_PRODUCTS, INV_BAG_SIZES, GALLON_TYPE_PRODUCTS, fmtNum } from '../../../api/inventory.js';
 import { showToast as notify } from '../../../utils/toast.js';
 
 function ConfRow({ label, val, bold }) {
@@ -31,21 +31,21 @@ export default function DailyCountTab() {
   const products = {};
   INV_PRODUCTS.forEach((prod) => {
     const bagSize = INV_BAG_SIZES[prod];
-    const isSlim = prod === 'Slim Gallon';
+    const isGallonType = !!GALLON_TYPE_PRODUCTS[prod];
     const prev = formData.previous[prod] || {};
-    const begBag = isSlim ? (prev.totalActual || 0) : (prev.actualBag || 0);
+    const begBag = isGallonType ? (prev.totalActual || 0) : (prev.actualBag || 0);
     const begBtl = prev.actualBottles || 0;
     const delBag = formData.deliveries[prod] || 0;
     const salesBtl = formData.sales[prod] || 0;
-    const slimBorrow = isSlim ? (formData.borrowed['Slim Gallon'] || {}) : {};
-    const borrowed = isSlim ? (slimBorrow.borrow || 0) : 0;
-    const returned = isSlim ? (slimBorrow.returned || 0) : 0;
+    const typeBorrow = isGallonType ? (formData.borrowed[prod] || {}) : {};
+    const borrowed = isGallonType ? (typeBorrow.borrow || 0) : 0;
+    const returned = isGallonType ? (typeBorrow.returned || 0) : 0;
 
-    const actBag = isSlim ? 0 : getVal(`${prod}_actualBag`);
+    const actBag = isGallonType ? 0 : getVal(`${prod}_actualBag`);
     const actBtl = getVal(`${prod}_actualBtl`);
 
     let available, expected, totalActual;
-    if (isSlim) {
+    if (isGallonType) {
       available = begBag + delBag;
       expected = available - salesBtl - borrowed + returned;
       totalActual = actBtl;
@@ -56,12 +56,12 @@ export default function DailyCountTab() {
     }
     const variance = totalActual - expected;
 
-    products[prod] = { bagSize, isSlim, begBag, begBtl, delBag, salesBtl, borrowed, returned, actBag, actBtl, available, expected, totalActual, variance };
+    products[prod] = { bagSize, isSlim: isGallonType, begBag, begBtl, delBag, salesBtl, borrowed, returned, actBag, actBtl, available, expected, totalActual, variance };
   });
 
   function allFilled() {
     return INV_PRODUCTS.every((p) => {
-      if (p === 'Slim Gallon') return values[`${p}_actualBtl`] !== undefined && values[`${p}_actualBtl`] !== '';
+      if (GALLON_TYPE_PRODUCTS[p]) return values[`${p}_actualBtl`] !== undefined && values[`${p}_actualBtl`] !== '';
       return values[`${p}_actualBag`] !== undefined && values[`${p}_actualBag`] !== '' && values[`${p}_actualBtl`] !== undefined && values[`${p}_actualBtl`] !== '';
     });
   }

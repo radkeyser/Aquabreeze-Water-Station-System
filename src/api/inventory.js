@@ -1,10 +1,11 @@
 import { supabase } from '../supabaseClient';
 import { formatDate, formatTime } from '../utils/format';
 
-export const INV_PRODUCTS = ['500 mL', '1000 mL', 'Slim Gallon'];
-export const INV_BAG_SIZES = { '500 mL': 200, '1000 mL': 113, 'Slim Gallon': 1 };
-export const INV_LOW_STOCK = { '500 mL': 500, '1000 mL': 500, 'Slim Gallon': 10 };
+export const INV_PRODUCTS = ['500 mL', '1000 mL', 'Slim Gallon', 'Poly Gallon'];
+export const INV_BAG_SIZES = { '500 mL': 200, '1000 mL': 113, 'Slim Gallon': 1, 'Poly Gallon': 1 };
+export const INV_LOW_STOCK = { '500 mL': 500, '1000 mL': 500, 'Slim Gallon': 10, 'Poly Gallon': 10 };
 export const OTHER_PRODUCTS = ['6L', '7L', '8L', '10L'];
+export const GALLON_TYPE_PRODUCTS = { 'Slim Gallon': 'Slim', 'Poly Gallon': 'Poly' };
 
 const INV_PRODUCT_ID_MAP = {
   'PROD-000004': '500 mL',
@@ -67,25 +68,29 @@ async function getPendingDeliveriesByProduct(dateStr) {
   return result;
 }
 
-async function getPendingBorrows() {
-  const { data, error } = await supabase.from('borrowed').select('gallon,record_status');
+async function getPendingBorrowsByType() {
+  const { data, error } = await supabase.from('borrowed').select('gallon,gallon_type,record_status');
   if (error) throw error;
-  let borrowed = 0, returned = 0;
+
+  const result = { Slim: { borrowed: 0, returned: 0 }, Poly: { borrowed: 0, returned: 0 } };
   (data || []).forEach((row) => {
     if (String(row.record_status || '').toLowerCase() === 'yes') return;
+    const type = row.gallon_type;
+    if (type !== 'Slim' && type !== 'Poly') return; // legacy untyped rows excluded from per-type counts
     const g = Number(row.gallon) || 0;
-    if (g > 0) borrowed += g; else returned += Math.abs(g);
+    if (g > 0) result[type].borrowed += g;
+    else result[type].returned += Math.abs(g);
   });
-  return { borrowed, returned };
+  return result;
 }
 
 // ---- Dashboard ----
 export async function getInventoryDashboard() {
   const today = formatDate(new Date());
-  const [pendingSales, pendingDels, { borrowed, returned }] = await Promise.all([
+  const [pendingSales, pendingDels, pendingBorrowsByType] = await Promise.all([
     getPendingSalesByProduct(),
     getPendingDeliveriesByProduct(today),
-    getPendingBorrows(),
+    getPendingBorrowsByType(),
   ]);
 
   const products = [];
@@ -94,11 +99,13 @@ export async function getInventoryDashboard() {
   for (const p of INV_PRODUCTS) {
     const prev = await getLastDailyInventory(p);
     const bagSize = INV_BAG_SIZES[p] || 1;
-    const isSlim = p === 'Slim Gallon';
-    const begTotal = isSlim ? prev.totalActual : prev.actualBag * bagSize + prev.actualBottles;
+    const gallonType = GALLON_TYPE_PRODUCTS[p]; // 'Slim' | 'Poly' | undefined
+    const isGallonType = !!gallonType;
+    const { borrowed, returned } = isGallonType ? pendingBorrowsByType[gallonType] : { borrowed: 0, returned: 0 };
+    const begTotal = isGallonType ? prev.totalActual : prev.actualBag * bagSize + prev.actualBottles;
     const delBtl = pendingDels[p] || 0;
     const sales = pendingSales[p] || 0;
-    const expected = isSlim ? begTotal + delBtl - sales - borrowed + returned : begTotal + delBtl - sales;
+    const expected = isGallonType ? begTotal + delBtl - sales - borrowed + returned : begTotal + delBtl - sales;
 
     products.push({
       name: p,
@@ -106,8 +113,8 @@ export async function getInventoryDashboard() {
       beginning: begTotal,
       deliveries: delBtl,
       sales,
-      borrowed: isSlim ? borrowed : 0,
-      returned: isSlim ? returned : 0,
+      borrowed: isGallonType ? borrowed : 0,
+      returned: isGallonType ? returned : 0,
       expectedEnding: expected,
     });
 
@@ -150,20 +157,25 @@ async function getInventoryTrend(days) {
 // ---- Daily Inventory Form ----
 export async function getDailyInventoryFormData() {
   const today = formatDate(new Date());
-  const [pendingSales, pendingDels, { borrowed, returned }] = await Promise.all([
+  const [pendingSales, pendingDels, pendingBorrowsByType] = await Promise.all([
     getPendingSalesByProduct(),
     getPendingDeliveriesByProduct(today),
-    getPendingBorrows(),
+    getPendingBorrowsByType(),
   ]);
 
   const previous = {};
   for (const p of INV_PRODUCTS) previous[p] = await getLastDailyInventory(p);
 
+  const borrowed = {};
+  Object.entries(GALLON_TYPE_PRODUCTS).forEach(([productName, type]) => {
+    borrowed[productName] = { borrow: pendingBorrowsByType[type].borrowed, returned: pendingBorrowsByType[type].returned };
+  });
+
   return {
     previous,
     deliveries: pendingDels,
     sales: pendingSales,
-    borrowed: { 'Slim Gallon': { borrow: borrowed, returned } },
+    borrowed,
     date: today,
   };
 }
