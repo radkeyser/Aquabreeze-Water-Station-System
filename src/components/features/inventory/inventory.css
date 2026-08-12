@@ -1192,6 +1192,41 @@
   min-height: 0;
 }
 
+.mr-section-head-toggle {
+  width: 100%;
+  border: none;
+  background: var(--muted);
+  cursor: pointer;
+  font-family: var(--font);
+  font-weight: 700;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  transition: background 150ms ease;
+}
+.mr-section-head-toggle:hover {
+  background: var(--accent);
+}
+.mr-section-collapsed .mr-section-head-toggle {
+  border-radius: var(--radius-lg);
+}
+.mr-section-chevron {
+  margin-left: auto;
+  font-size: 20px;
+  color: var(--muted-fg);
+  transition: transform 150ms ease;
+}
+.mr-section-collapsed {
+  padding-bottom: 0;
+}
+.mr-section-collapsed .mr-section-head {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
 @media (max-width: 500px) {
   .inv-scroll-modal {
     max-height: 95vh;

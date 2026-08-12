@@ -19,11 +19,16 @@ function ManualRow({ label, unit, value, onChange }) {
 function ComputedRow({ label, value, cls, formula }) {
   return <div className="mr-field-row"><div className="mr-field-lbl">{label}</div><div className={`mr-computed-val ${cls || ''}`}>{value}</div>{formula && <div className="mr-field-note">{formula}</div>}</div>;
 }
-function Section({ icon, title, children }) {
+function Section({ icon, title, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="mr-section">
-      <div className="mr-section-head"><span className="material-icons-outlined">{icon}</span><span>{title}</span></div>
-      <div className="mr-section-body">{children}</div>
+    <div className={`mr-section${open ? '' : ' mr-section-collapsed'}`}>
+      <button type="button" className="mr-section-head mr-section-head-toggle" onClick={() => setOpen((o) => !o)}>
+        <span className="material-icons-outlined">{icon}</span>
+        <span>{title}</span>
+        <span className="material-icons-outlined mr-section-chevron">{open ? 'expand_less' : 'expand_more'}</span>
+      </button>
+      {open && <div className="mr-section-body">{children}</div>}
     </div>
   );
 }
