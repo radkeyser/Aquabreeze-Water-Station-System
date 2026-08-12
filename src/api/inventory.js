@@ -309,6 +309,10 @@ export async function getInventoryHistory(year, month) {
         actualBtl: Number(row.actual_bottle) || 0,
         totalActual: Number(row.total_actual) || 0,
         variance: Number(row.variance) || 0,
+        coolerBox: Number(row.cooler_box) || 0,
+        coolerPcs: Number(row.cooler_pcs) || 0,
+        iceMakerPcs: Number(row.ice_maker_pcs) || 0,
+        floorBreakdown: row.floor_breakdown || {},
       };
     });
     return { date: dateStr, time: recordTime, products, totalVariance, hasDelivery: false };

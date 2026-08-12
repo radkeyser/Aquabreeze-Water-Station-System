@@ -1177,6 +1177,27 @@
   font-weight: 600;
 }
 
+/* ── Fixed-height scrollable modal (History detail, Delivery form, etc.) ── */
+.inv-scroll-modal {
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.inv-scroll-modal .pay-modal-header {
+  flex-shrink: 0;
+}
+.inv-scroll-modal-body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 500px) {
+  .inv-scroll-modal {
+    max-height: 95vh;
+  }
+}
+
 @media (max-width: 500px) {
   .inv-delivery-modal {
     width: 100%;

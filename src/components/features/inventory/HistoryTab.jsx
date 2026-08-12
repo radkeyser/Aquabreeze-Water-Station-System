@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getInventoryHistory, fmtNum } from '../../../api/inventory.js';
+import { getInventoryHistory, GALLON_TYPE_PRODUCTS, fmtNum } from '../../../api/inventory.js';
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAY_LABELS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -120,17 +120,19 @@ export default function HistoryTab() {
       )}
 
       <div className={`pay-modal-overlay${detail ? ' show' : ''}`}>
-        <div className="pay-modal" style={{ maxWidth: 480 }}>
+        <div className="pay-modal inv-scroll-modal" style={{ maxWidth: 480 }}>
           <div className="pay-modal-header">
             <div className="pay-modal-title"><span className="material-icons-outlined" style={{ verticalAlign: 'middle', marginRight: 6, fontSize: 18 }}>calendar_today</span>{detail?.date} — Inventory Record</div>
             <button type="button" className="pdp-close-btn" onClick={() => setDetail(null)}><span className="material-icons-outlined">close</span></button>
           </div>
           {detail && (
-            <div className="pay-modal-body">
+            <div className="pay-modal-body inv-scroll-modal-body">
               {detail.products.map((p) => {
-                const isSlim = p.name === 'Slim Gallon';
-                const unit = isSlim ? ' gal' : ' btl';
+                const isGallonType = !!GALLON_TYPE_PRODUCTS[p.name];
+                const isCooledProduct = p.name === '1000 mL';
+                const unit = isGallonType ? ' gal' : ' btl';
                 const vCls = p.variance < 0 ? 'inv-neg' : p.variance > 0 ? 'inv-pos' : 'inv-zero';
+                const fb = p.floorBreakdown || {};
                 return (
                   <div className="invh-detail-product" key={p.name}>
                     <div className="invh-detail-prod-hdr">
@@ -138,7 +140,7 @@ export default function HistoryTab() {
                       <span className="invh-detail-prod-name">{p.name}</span>
                     </div>
                     <div className="inv-confirm-grid">
-                      {isSlim ? (
+                      {isGallonType ? (
                         <>
                           <ConfRow label="Beg. Inv. (Gallon)" val={`${fmtNum(p.begBag)} gal`} />
                           <ConfRow label="+ Delivery (Gallon)" val={`${fmtNum(p.delBag)} gal`} />
@@ -147,19 +149,26 @@ export default function HistoryTab() {
                           {p.borrowedGal > 0 && <ConfRow label="− Borrowed (Gallon)" val={`${fmtNum(p.borrowedGal)} gal`} />}
                           {p.returnedGal > 0 && <ConfRow label="+ Returned (Gallon)" val={`${fmtNum(p.returnedGal)} gal`} />}
                           <ConfRow label="Expected Ending" val={`${fmtNum(p.expected)} gal`} bold />
-                          <ConfRow label="Actual Ending (Gallon)" val={`${fmtNum(p.actualBtl)} gal`} />
+                          <ConfRow label="Actual Ending (Gallon) — 1F/2F" val={`${fmtNum(fb.actualBtl?.first || 0)}/${fmtNum(fb.actualBtl?.second || 0)} = ${fmtNum(p.actualBtl)} gal`} />
                           <ConfRow label="Total Actual" val={`${fmtNum(p.totalActual)} gal`} bold />
                         </>
                       ) : (
                         <>
                           <ConfRow label="Beg. Inv. (Bags)" val={`${fmtNum(p.begBag)} bags`} />
-                          <ConfRow label="Beg. Inv. (Bottles)" val={`${fmtNum(p.begBtl)} btl`} />
+                          <ConfRow label="Beg. Inv. (Tray Bottles)" val={`${fmtNum(p.begBtl)} btl`} />
                           <ConfRow label="+ Delivery (Bottles)" val={`${fmtNum(p.delBag)} btl`} />
                           <ConfRow label="Available for Sale" val={`${fmtNum(p.available)} btl`} bold />
                           <ConfRow label="− Sales" val={`${fmtNum(p.salesBtl)} btl`} />
                           <ConfRow label="Expected Ending" val={`${fmtNum(p.expected)} btl`} bold />
-                          <ConfRow label="Actual Ending (Bags)" val={`${fmtNum(p.actualBag)} bags`} />
-                          <ConfRow label="Actual Ending (Btl)" val={`${fmtNum(p.actualBtl)} btl`} />
+                          <ConfRow label="Actual Ending (Bags) — 1F/2F" val={`${fmtNum(fb.actualBag?.first || 0)}/${fmtNum(fb.actualBag?.second || 0)} = ${fmtNum(p.actualBag)} bags`} />
+                          <ConfRow label="Actual Ending (Tray Btl) — 1F/2F" val={`${fmtNum(fb.actualBtl?.first || 0)}/${fmtNum(fb.actualBtl?.second || 0)} = ${fmtNum(p.actualBtl)} btl`} />
+                          {isCooledProduct && (
+                            <>
+                              <ConfRow label="Cooler Box — 1F/2F" val={`${fmtNum(fb.coolerBox?.first || 0)}/${fmtNum(fb.coolerBox?.second || 0)} = ${fmtNum(p.coolerBox)} box`} />
+                              <ConfRow label="Cooler Pcs — 1F/2F" val={`${fmtNum(fb.coolerPcs?.first || 0)}/${fmtNum(fb.coolerPcs?.second || 0)} = ${fmtNum(p.coolerPcs)} btl`} />
+                              <ConfRow label="Ice Maker — 1F/2F" val={`${fmtNum(fb.iceMakerPcs?.first || 0)}/${fmtNum(fb.iceMakerPcs?.second || 0)} = ${fmtNum(p.iceMakerPcs)} btl`} />
+                            </>
+                          )}
                           <ConfRow label="Total Actual" val={`${fmtNum(p.totalActual)} btl`} bold />
                         </>
                       )}
