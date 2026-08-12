@@ -506,6 +506,12 @@ function LogbookPageContent() {
                 <div className="pay-modal-debt" style={{ marginTop: 4 }}>
                   <span style={{ fontWeight: 600 }}>{deliverEntry.product} ×{deliverEntry.qty}</span> · {deliverEntry.time}
                 </div>
+                {deliverEntry.deliveryAttempts > 0 && (
+                  <div className="pay-modal-debt" style={{ marginTop: 4, color: 'hsl(260,50%,45%)', fontWeight: 700 }}>
+                    <span className="material-icons-outlined" style={{ fontSize: 13, verticalAlign: 'middle' }}>history</span>
+                    {' '}{deliverEntry.deliveryAttempts} previous delivery attempt{deliverEntry.deliveryAttempts === 1 ? '' : 's'}
+                  </div>
+                )}
               </div>
               <div className="pdp-field">
                 <label className="pdp-label">Delivery Status</label>
