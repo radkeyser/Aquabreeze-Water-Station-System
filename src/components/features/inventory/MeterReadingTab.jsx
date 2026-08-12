@@ -236,7 +236,7 @@ export default function MeterReadingTab({ onGoToDaily }) {
         <div className="mr-total-bar"><span>Total Refilled Stock (pcs)</span><span className="mr-total-val">{fmtNum(totalStockPoly + totalStockSlim)} pcs</span></div>
       </Section>
 
-      <Section icon="water_drop" title="Refill (Bottles)">
+      <Section icon="water_drop" title="Refill (Bottles)" defaultOpen={false}>
         <div className="mr-cols-2">
           <div className="mr-col">
             <div className="mr-col-head">500 mL</div>
@@ -278,7 +278,7 @@ export default function MeterReadingTab({ onGoToDaily }) {
         <div className="mr-total-bar"><span>Total Refilled Gallon</span><span className="mr-total-val">{fmtNum(galTotal)} L</span></div>
       </Section>
 
-      <Section icon="category" title="Other Products">
+      <Section icon="category" title="Other Products" defaultOpen={false}>
         <div className="mr-cols-4">
           <div className="mr-col"><AutoRow label="6L Bottles" value={`${fmtNum(o6)} pcs`} note="From current shift" /><ComputedRow label="Liters" value={fmtNum(l6)} formula="× 6 L" /></div>
           <div className="mr-col"><AutoRow label="7L Bottles" value={`${fmtNum(o7)} pcs`} note="From current shift" /><ComputedRow label="Liters" value={fmtNum(l7)} formula="× 7 L" /></div>
