@@ -22,7 +22,7 @@ export const NAV_ITEMS = [
   { key: 'dashboard', path: '/', label: 'Dashboard', icon: 'dashboard', element: DashboardPage },
   { key: 'reports', path: '/reports', label: 'Reports', icon: 'table_chart', element: ReportsPage },
   { key: 'cash-management', path: '/cash-management', label: 'Cash Management', icon: 'account_balance', element: CashManagementPage },
-  { key: 'inventory', path: '/inventory', label: 'Inventory', icon: 'inventory_2', element: InventoryPage },
+  { key: 'inventory', path: '/inventory/*', label: 'Inventory', icon: 'inventory_2', element: InventoryPage },
   { key: 'cash-drawer', path: '/cash-drawer', label: 'Cash Drawer', icon: 'account_balance_wallet', element: CashDrawerPage },
   { key: 'pos', path: '/pos', label: 'Point of Sale', icon: 'shopping_cart', element: POSPage },
   { key: 'logbook', path: '/logbook', label: 'Logbook', icon: 'menu_book', element: LogbookPage },
@@ -33,7 +33,9 @@ export const NAV_ITEMS = [
 ];
 
 export function getNavItemByPath(pathname) {
-  return NAV_ITEMS.find((item) =>
-    item.path === '/' ? pathname === '/' : pathname.startsWith(item.path)
-  );
+  return NAV_ITEMS.find((item) => {
+    if (item.path === '/') return pathname === '/';
+    const basePath = item.path.replace(/\/\*$/, '');
+    return pathname === basePath || pathname.startsWith(`${basePath}/`);
+  });
 }

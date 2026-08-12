@@ -24,7 +24,7 @@ export default function Sidebar({ expanded = false, setExpanded = () => {} }) {
           return (
             <NavLink
               key={item.key}
-              to={item.path}
+              to={item.path.replace(/\/\*$/, '')}
               end={item.path === '/'}
               className={({ isActive }) =>
                 clsx('sidebar-btn', isActive ? 'active' : '')

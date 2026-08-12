@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import RequireShift from '../../../components/features/shift/RequireShift.jsx';
 import DashboardTab from './DashboardTab.jsx';
 import DailyCountTab from './DailyCountTab.jsx';
@@ -18,9 +18,38 @@ const TABS = [
   { key: 'meter', icon: 'speed', label: 'Meter Reading' },
 ];
 
+// Maps internal tab keys to the URL segment shown in the address bar,
+// e.g. /inventory/DailyCount — and back again for reading the URL on load.
+const TAB_SEGMENTS = { dashboard: 'Dashboard', daily: 'DailyCount', delivery: 'Delivery', variance: 'Variance', history: 'History', meter: 'MeterReading' };
+const SEGMENT_TO_TAB = Object.fromEntries(Object.entries(TAB_SEGMENTS).map(([k, v]) => [v.toLowerCase(), k]));
+
+function segmentFromPath(pathname) {
+  const seg = pathname.replace(/^\/inventory\/?/, '').split('/')[0] || '';
+  return SEGMENT_TO_TAB[seg.toLowerCase()] || null;
+}
+
 function InventoryPageContent() {
   const location = useLocation();
-  const [tab, setTab] = useState(location.state?.tab || 'dashboard');
+  const navigate = useNavigate();
+  const [tab, setTabState] = useState(() => segmentFromPath(location.pathname) || location.state?.tab || 'dashboard');
+
+  function setTab(newTab) {
+    setTabState(newTab);
+    navigate(`/inventory/${TAB_SEGMENTS[newTab]}`);
+  }
+
+  // Keep the active tab in sync with the URL for back/forward navigation
+  // and direct links (e.g. from the End Shift modal).
+  useEffect(() => {
+    const matched = segmentFromPath(location.pathname);
+    if (matched && matched !== tab) {
+      setTabState(matched);
+    } else if (!matched && location.pathname.replace(/\/$/, '') === '/inventory') {
+      // Landed on the bare /inventory URL — normalize to the current tab's URL.
+      navigate(`/inventory/${TAB_SEGMENTS[tab]}`, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   return (
     <div className="inv-wrapper">
