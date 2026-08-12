@@ -191,6 +191,7 @@ function LogbookPageContent() {
           deliveredTime: result.deliveredTime || '',
           deliveredDate: result.deliveredDate || '',
           deliveredQty: newStatus === 'Partial' ? qty : newStatus === 'Delivered' ? e.qty : 0,
+          deliveryAttempts: result.deliveryAttempts ?? e.deliveryAttempts,
         };
       }));
       showToast(`Status updated to ${newStatus}`, { type: 'success' });

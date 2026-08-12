@@ -20,6 +20,7 @@ function mapEntry(row) {
     tip: Number(row.tip) || 0,
     notes: row.notes || '',
     tipClaimed: !!row.tip_claimed,
+    deliveryAttempts: Number(row.delivery_attempts) || 0,
   };
 }
 

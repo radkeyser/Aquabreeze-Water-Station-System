@@ -54,6 +54,12 @@ export default function LogbookCard({
         <span className={`lb-status-chip lb-status-chip-${(e.status || 'Undelivered').toLowerCase()}`}>{stLabel}</span>
       </div>
 
+      {e.deliveryAttempts > 1 && (
+        <div className="lb-card-attempts" title={`${e.deliveryAttempts} delivery attempts`}>
+          <span className="material-icons-outlined">history</span>{e.deliveryAttempts} delivery attempts
+        </div>
+      )}
+
       <div className="lb-card-body">
         <div className="lb-card-product">
           <span className="material-icons-outlined">water_drop</span>
