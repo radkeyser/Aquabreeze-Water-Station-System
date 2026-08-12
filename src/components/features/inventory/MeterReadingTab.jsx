@@ -19,13 +19,14 @@ function ManualRow({ label, unit, value, onChange }) {
 function ComputedRow({ label, value, cls, formula }) {
   return <div className="mr-field-row"><div className="mr-field-lbl">{label}</div><div className={`mr-computed-val ${cls || ''}`}>{value}</div>{formula && <div className="mr-field-note">{formula}</div>}</div>;
 }
-function Section({ icon, title, children, defaultOpen = true }) {
+function Section({ icon, title, children, defaultOpen = true, summary, summaryNegative = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className={`mr-section${open ? '' : ' mr-section-collapsed'}`}>
       <button type="button" className="mr-section-head mr-section-head-toggle" onClick={() => setOpen((o) => !o)}>
         <span className="material-icons-outlined">{icon}</span>
         <span>{title}</span>
+        {!open && summary && <span className={`mr-section-summary${summaryNegative ? ' mr-section-summary-neg' : ''}`}>{summary}</span>}
         <span className="material-icons-outlined mr-section-chevron">{open ? 'expand_less' : 'expand_more'}</span>
       </button>
       {open && <div className="mr-section-body">{children}</div>}
@@ -216,7 +217,7 @@ export default function MeterReadingTab({ onGoToDaily }) {
         </div>
       </div>
 
-      <Section icon="inventory_2" title="Stock">
+      <Section icon="inventory_2" title="Stock" summary={`${fmtNum(totalStockPoly + totalStockSlim)} pcs`} summaryNegative={(totalStockPoly + totalStockSlim) < 0}>
         <div className="mr-cols-2">
           <div className="mr-col">
             <div className="mr-col-head">Poly</div>
@@ -236,7 +237,7 @@ export default function MeterReadingTab({ onGoToDaily }) {
         <div className="mr-total-bar"><span>Total Refilled Stock (pcs)</span><span className="mr-total-val">{fmtNum(totalStockPoly + totalStockSlim)} pcs</span></div>
       </Section>
 
-      <Section icon="water_drop" title="Refill (Bottles)" defaultOpen={false}>
+      <Section icon="water_drop" title="Refill (Bottles)" defaultOpen={false} summary={`${fmtNum(bottleTotal)} L`} summaryNegative={bottleTotal < 0}>
         <div className="mr-cols-2">
           <div className="mr-col">
             <div className="mr-col-head">500 mL</div>
@@ -258,7 +259,7 @@ export default function MeterReadingTab({ onGoToDaily }) {
         <div className="mr-total-bar"><span>Total Refilled Bottles</span><span className="mr-total-val">{fmtNum(bottleTotal)} L</span></div>
       </Section>
 
-      <Section icon="local_drink" title="5-Gallon">
+      <Section icon="local_drink" title="5-Gallon" summary={`${fmtNum(galTotal)} L`} summaryNegative={galTotal < 0}>
         <div className="mr-cols-2">
           <div className="mr-col">
             <div className="mr-col-head">Poly (× {convPoly} L)</div>
@@ -278,7 +279,7 @@ export default function MeterReadingTab({ onGoToDaily }) {
         <div className="mr-total-bar"><span>Total Refilled Gallon</span><span className="mr-total-val">{fmtNum(galTotal)} L</span></div>
       </Section>
 
-      <Section icon="category" title="Other Products" defaultOpen={false}>
+      <Section icon="category" title="Other Products" defaultOpen={false} summary={`${fmtNum(otherTotal)} L`} summaryNegative={otherTotal < 0}>
         <div className="mr-cols-4">
           <div className="mr-col"><AutoRow label="6L Bottles" value={`${fmtNum(o6)} pcs`} note="From current shift" /><ComputedRow label="Liters" value={fmtNum(l6)} formula="× 6 L" /></div>
           <div className="mr-col"><AutoRow label="7L Bottles" value={`${fmtNum(o7)} pcs`} note="From current shift" /><ComputedRow label="Liters" value={fmtNum(l7)} formula="× 7 L" /></div>
@@ -288,7 +289,7 @@ export default function MeterReadingTab({ onGoToDaily }) {
         <div className="mr-total-bar"><span>Total Other Products</span><span className="mr-total-val">{fmtNum(otherTotal)} L</span></div>
       </Section>
 
-      <Section icon="analytics" title="Actual Refilled & Meter (Liters)">
+      <Section icon="analytics" title="Actual Refilled & Meter (Liters)" summary={`${fmtNum(actualRefilled)} L`} summaryNegative={actualRefilled < 0}>
         <div className="mr-actual-breakdown">
           <div className="mr-ab-row"><span>Total Refilled Stock (pcs)</span><span className="mr-ab-val">{fmtNum(soldStockL)}</span></div>
           <div className="mr-ab-row"><span>+ Refilled Bottles (L)</span><span className="mr-ab-val inv-num-green">{fmtNum(bottleTotal)}</span></div>
