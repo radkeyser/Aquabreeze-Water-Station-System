@@ -24,6 +24,12 @@ export default function DailyCountTab() {
 
   function setVal(key, v) { setValues((prev) => ({ ...prev, [key]: v })); }
   function getVal(key) { return parseFloat(values[key]) || 0; }
+  function getFloorSum(prod, field) { return getVal(`${prod}_${field}_1F`) + getVal(`${prod}_${field}_2F`); }
+  function floorFilled(prod, field) {
+    const k1 = `${prod}_${field}_1F`;
+    const k2 = `${prod}_${field}_2F`;
+    return values[k1] !== undefined && values[k1] !== '' && values[k2] !== undefined && values[k2] !== '';
+  }
 
   if (loading) return <div style={{ padding: '80px 0', textAlign: 'center' }}><div className="spinner" /></div>;
   if (!formData) return <div className="empty-state" style={{ padding: 48 }}>Error loading form.</div>;
@@ -45,11 +51,11 @@ export default function DailyCountTab() {
     const borrowed = isGallonType ? (typeBorrow.borrow || 0) : 0;
     const returned = isGallonType ? (typeBorrow.returned || 0) : 0;
 
-    const actBag = isGallonType ? 0 : getVal(`${prod}_actualBag`);
-    const actBtl = getVal(`${prod}_actualBtl`);
-    const coolerBox = isCooledProduct ? getVal(`${prod}_coolerBox`) : 0;
-    const coolerPcs = isCooledProduct ? getVal(`${prod}_coolerPcs`) : 0;
-    const iceMakerPcs = isCooledProduct ? getVal(`${prod}_iceMakerPcs`) : 0;
+    const actBag = isGallonType ? 0 : getFloorSum(prod, 'actualBag');
+    const actBtl = getFloorSum(prod, 'actualBtl');
+    const coolerBox = isCooledProduct ? getFloorSum(prod, 'coolerBox') : 0;
+    const coolerPcs = isCooledProduct ? getFloorSum(prod, 'coolerPcs') : 0;
+    const iceMakerPcs = isCooledProduct ? getFloorSum(prod, 'iceMakerPcs') : 0;
 
     let available, expected, totalActual;
     if (isGallonType) {
@@ -69,13 +75,10 @@ export default function DailyCountTab() {
 
   function allFilled() {
     return INV_PRODUCTS.every((p) => {
-      if (GALLON_TYPE_PRODUCTS[p]) return values[`${p}_actualBtl`] !== undefined && values[`${p}_actualBtl`] !== '';
-      const baseOk = values[`${p}_actualBag`] !== undefined && values[`${p}_actualBag`] !== '' && values[`${p}_actualBtl`] !== undefined && values[`${p}_actualBtl`] !== '';
+      if (GALLON_TYPE_PRODUCTS[p]) return floorFilled(p, 'actualBtl');
+      const baseOk = floorFilled(p, 'actualBag') && floorFilled(p, 'actualBtl');
       if (p !== '1000 mL') return baseOk;
-      return baseOk
-        && values[`${p}_coolerBox`] !== undefined && values[`${p}_coolerBox`] !== ''
-        && values[`${p}_coolerPcs`] !== undefined && values[`${p}_coolerPcs`] !== ''
-        && values[`${p}_iceMakerPcs`] !== undefined && values[`${p}_iceMakerPcs`] !== '';
+      return baseOk && floorFilled(p, 'coolerBox') && floorFilled(p, 'coolerPcs') && floorFilled(p, 'iceMakerPcs');
     });
   }
 
@@ -89,12 +92,22 @@ export default function DailyCountTab() {
     const payload = { date: formData.date, products: {} };
     INV_PRODUCTS.forEach((p) => {
       const d = products[p];
+      const floorBreakdown = {
+        actualBag: { first: getVal(`${p}_actualBag_1F`), second: getVal(`${p}_actualBag_2F`) },
+        actualBtl: { first: getVal(`${p}_actualBtl_1F`), second: getVal(`${p}_actualBtl_2F`) },
+      };
+      if (p === '1000 mL') {
+        floorBreakdown.coolerBox = { first: getVal(`${p}_coolerBox_1F`), second: getVal(`${p}_coolerBox_2F`) };
+        floorBreakdown.coolerPcs = { first: getVal(`${p}_coolerPcs_1F`), second: getVal(`${p}_coolerPcs_2F`) };
+        floorBreakdown.iceMakerPcs = { first: getVal(`${p}_iceMakerPcs_1F`), second: getVal(`${p}_iceMakerPcs_2F`) };
+      }
       payload.products[p] = {
         begBag: d.begBag, begBtl: d.isSlim ? 0 : d.begBtl, delBag: d.delBag, salesBtl: d.salesBtl,
         borrowed: d.borrowed, returned: d.returned, available: d.available, expected: d.expected,
         actualBag: d.isSlim ? 0 : d.actBag, actualBtl: d.actBtl, totalActual: d.totalActual,
         variance: d.variance, bagSize: d.bagSize,
         coolerBox: d.coolerBox || 0, coolerPcs: d.coolerPcs || 0, iceMakerPcs: d.iceMakerPcs || 0,
+        floorBreakdown,
       };
     });
     try {
@@ -143,7 +156,7 @@ export default function DailyCountTab() {
                     <ConfRow label="− Borrowed (Gallon)" val={`${d.borrowed} gal`} />
                     <ConfRow label="+ Returned (Gallon)" val={`${d.returned} gal`} />
                     <ConfRow label="Expected Ending" val={`${d.expected} gal`} bold />
-                    <ConfRow label="Actual Ending (Gallon)" val={`${d.actBtl} gal`} />
+                    <ConfRow label="Actual Ending (Gallon) — 1F / 2F" val={`${getVal(p + '_actualBtl_1F')} / ${getVal(p + '_actualBtl_2F')} = ${d.actBtl} gal`} />
                     <ConfRow label="Total Actual Ending" val={`${d.totalActual} gal`} bold />
                   </>
                 ) : (
@@ -154,13 +167,13 @@ export default function DailyCountTab() {
                     <ConfRow label="Available for Sale" val={`${d.available} btl`} bold />
                     <ConfRow label="− Sales" val={`${d.salesBtl} btl`} />
                     <ConfRow label="Expected Ending" val={`${d.expected} btl`} bold />
-                    <ConfRow label="Actual Ending (Bags)" val={`${d.actBag} bags`} />
-                    <ConfRow label="Actual Ending (Tray Btl)" val={`${d.actBtl} btl`} />
+                    <ConfRow label="Actual Ending (Bags) — 1F / 2F" val={`${getVal(p + '_actualBag_1F')} / ${getVal(p + '_actualBag_2F')} = ${d.actBag} bags`} />
+                    <ConfRow label="Actual Ending (Tray Btl) — 1F / 2F" val={`${getVal(p + '_actualBtl_1F')} / ${getVal(p + '_actualBtl_2F')} = ${d.actBtl} btl`} />
                     {d.isCooledProduct && (
                       <>
-                        <ConfRow label="Cooler (Box of 40)" val={`${d.coolerBox} box`} />
-                        <ConfRow label="Cooler (Loose Pcs)" val={`${d.coolerPcs} btl`} />
-                        <ConfRow label="Ice Maker (Pcs)" val={`${d.iceMakerPcs} btl`} />
+                        <ConfRow label="Cooler Box — 1F / 2F" val={`${getVal(p + '_coolerBox_1F')} / ${getVal(p + '_coolerBox_2F')} = ${d.coolerBox} box`} />
+                        <ConfRow label="Cooler Pcs — 1F / 2F" val={`${getVal(p + '_coolerPcs_1F')} / ${getVal(p + '_coolerPcs_2F')} = ${d.coolerPcs} btl`} />
+                        <ConfRow label="Ice Maker — 1F / 2F" val={`${getVal(p + '_iceMakerPcs_1F')} / ${getVal(p + '_iceMakerPcs_2F')} = ${d.iceMakerPcs} btl`} />
                       </>
                     )}
                     <ConfRow label="Total Actual Ending" val={`${d.totalActual} btl`} bold />
@@ -244,16 +257,16 @@ export default function DailyCountTab() {
                 </div>
               </div>
               <div className="inv-daily-col">
-                <div className="inv-col-head inv-col-head-manual"><span className="material-icons-outlined">edit</span> Enter Actual</div>
+                <div className="inv-col-head inv-col-head-manual"><span className="material-icons-outlined">edit</span> Enter Actual (by Floor)</div>
                 {!isSlim && (
-                  <ManualField label="Actual Ending (Bags)" unit="bags" value={values[`${prod}_actualBag`] || ''} onChange={(v) => setVal(`${prod}_actualBag`, v)} />
+                  <ManualFieldPair label="Actual Ending (Bags)" unit="bags" prod={prod} field="actualBag" values={values} onChange={setVal} />
                 )}
-                <ManualField label={isSlim ? 'Actual Ending (Gallon)' : 'Actual Ending (Tray Bottles)'} unit={isSlim ? 'gal' : 'btl'} value={values[`${prod}_actualBtl`] || ''} onChange={(v) => setVal(`${prod}_actualBtl`, v)} />
+                <ManualFieldPair label={isSlim ? 'Actual Ending (Gallon)' : 'Actual Ending (Tray Bottles)'} unit={isSlim ? 'gal' : 'btl'} prod={prod} field="actualBtl" values={values} onChange={setVal} />
                 {prod === '1000 mL' && (
                   <>
-                    <ManualField label="Cooler (Box of 40)" unit="box" value={values[`${prod}_coolerBox`] || ''} onChange={(v) => setVal(`${prod}_coolerBox`, v)} />
-                    <ManualField label="Cooler (Loose Pcs)" unit="btl" value={values[`${prod}_coolerPcs`] || ''} onChange={(v) => setVal(`${prod}_coolerPcs`, v)} />
-                    <ManualField label="Ice Maker (Pcs)" unit="btl" value={values[`${prod}_iceMakerPcs`] || ''} onChange={(v) => setVal(`${prod}_iceMakerPcs`, v)} />
+                    <ManualFieldPair label="Cooler (Box of 40)" unit="box" prod={prod} field="coolerBox" values={values} onChange={setVal} />
+                    <ManualFieldPair label="Cooler (Loose Pcs)" unit="btl" prod={prod} field="coolerPcs" values={values} onChange={setVal} />
+                    <ManualFieldPair label="Ice Maker (Pcs)" unit="btl" prod={prod} field="iceMakerPcs" values={values} onChange={setVal} />
                   </>
                 )}
                 <div className="inv-daily-result">
@@ -303,6 +316,33 @@ function ManualField({ label, unit, value, onChange }) {
         />
         <span className="inv-input-unit">{unit}</span>
       </div>
+    </div>
+  );
+}
+
+function ManualFieldPair({ label, unit, prod, field, values, onChange }) {
+  const key1 = `${prod}_${field}_1F`;
+  const key2 = `${prod}_${field}_2F`;
+  const v1 = values[key1] ?? '';
+  const v2 = values[key2] ?? '';
+  const filled1 = v1 !== '' && v1 !== undefined && v1 !== null;
+  const filled2 = v2 !== '' && v2 !== undefined && v2 !== null;
+  const total = (parseFloat(v1) || 0) + (parseFloat(v2) || 0);
+  return (
+    <div className="inv-field-row inv-field-manual">
+      <div className="inv-field-lbl">{label} <span style={{ color: 'var(--destructive)' }}>*</span></div>
+      <div className="inv-floor-pair">
+        <div className="inv-floor-input-wrap">
+          <span className="inv-floor-tag">1F</span>
+          <input type="number" min="0" placeholder="0" className={`inv-input inv-manual-input ${filled1 ? 'inv-input-filled' : 'inv-input-empty'}`} value={v1} onChange={(e) => onChange(key1, e.target.value)} />
+        </div>
+        <div className="inv-floor-input-wrap">
+          <span className="inv-floor-tag">2F</span>
+          <input type="number" min="0" placeholder="0" className={`inv-input inv-manual-input ${filled2 ? 'inv-input-filled' : 'inv-input-empty'}`} value={v2} onChange={(e) => onChange(key2, e.target.value)} />
+        </div>
+        <span className="inv-input-unit">{unit}</span>
+      </div>
+      <div className="inv-floor-total">Total: {total} {unit}</div>
     </div>
   );
 }
