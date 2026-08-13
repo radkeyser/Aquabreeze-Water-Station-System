@@ -38,6 +38,8 @@ function mapCustomer(row, unchargedMap, lastOrderMap, cutoffMs) {
     pointPerson: String(row.point_person || ''),
     utang: unchargedMap[id] ?? 0,
     gallon: Number(row.gallon) || 0,
+    gallonSlim: Number(row.gallon_slim) || 0,
+    gallonPoly: Number(row.gallon_poly) || 0,
     dispenser: Number(row.dispenser) || 0,
     overrideOn: row.override === true,
     override5gal: Number(row.override_5gal) || 0,

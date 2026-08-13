@@ -19,7 +19,8 @@ import { formatPeso } from '../../../utils/format.js';
 import './customers.css';
 import '../../../index.css';
 
-const SORT_COLS = ['name', 'location', 'pointPerson', 'gallon', 'dispenser', 'utang', 'status'];
+const SORT_COLS = ['name', 'location', 'pointPerson', 'gallonSlim', 'gallonPoly', 'dispenser', 'utang', 'status'];
+const COL_LABELS = { pointPerson: 'Point Person', gallonSlim: 'Slim Gallon', gallonPoly: 'Poly Gallon' };
 
 function customerPayload(c) {
   return {
@@ -544,7 +545,11 @@ export default function CustomersPage() {
       <div className="borrowed-totals-bar">
         <div className="borrowed-total-item">
           <span className="material-icons-outlined">water_drop</span>
-          <span>{customers.reduce((s, c) => s + (Number(c.gallon) || 0), 0)} Gallon(s) currently out</span>
+          <span>{customers.reduce((s, c) => s + (Number(c.gallonSlim) || 0), 0)} Slim Gallon(s) currently out</span>
+        </div>
+        <div className="borrowed-total-item">
+          <span className="material-icons-outlined">water_drop</span>
+          <span>{customers.reduce((s, c) => s + (Number(c.gallonPoly) || 0), 0)} Poly Gallon(s) currently out</span>
         </div>
         <div className="borrowed-total-item">
           <span className="material-icons-outlined">inventory_2</span>
@@ -632,7 +637,7 @@ export default function CustomersPage() {
                 {SORT_COLS.map((col) => (
                   <th key={col}>
                     <div className="sort-header" data-col={col} onClick={() => toggleSort(col)}>
-                      {col === 'pointPerson' ? 'Point Person' : col.charAt(0).toUpperCase() + col.slice(1)}
+                      {COL_LABELS[col] || col.charAt(0).toUpperCase() + col.slice(1)}
                       {' '}
                       <span className={`sort-icon${sortCol === col ? (sortDir === 1 ? ' sort-asc' : ' sort-desc') : ''}`} id={`sort-${col}`}>
                         {sortIcon(col)}
@@ -645,10 +650,10 @@ export default function CustomersPage() {
             </thead>
             <tbody id="customersTbody">
               {loading && (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40 }}>Loading...</td></tr>
+                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40 }}>Loading...</td></tr>
               )}
               {!loading && pageData.length === 0 && (
-                <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'hsl(var(--muted-fg))' }}>No customers found</td></tr>
+                <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'hsl(var(--muted-fg))' }}>No customers found</td></tr>
               )}
               {!loading && pageData.map((customer) => (
                 <CustomerTableRow

@@ -14,7 +14,7 @@ export default function CustomerTableRow({
   onDelete,
   inlineSaving,
 }) {
-  const hasBorrow = customer.gallon > 0 || customer.dispenser > 0;
+  const hasBorrow = customer.gallonSlim > 0 || customer.gallonPoly > 0 || customer.dispenser > 0;
   const canDelete = !hasBorrow && customer.utang <= 0;
 
   return (
@@ -25,7 +25,8 @@ export default function CustomerTableRow({
       data-location={(customer.location || '').toLowerCase()}
       data-pointperson={(customer.pointPerson || '').toLowerCase()}
       data-pointpersonraw={customer.pointPerson || ''}
-      data-gallon={customer.gallon}
+      data-gallon-slim={customer.gallonSlim}
+      data-gallon-poly={customer.gallonPoly}
       data-dispenser={customer.dispenser}
       data-utang={customer.utang}
     >
@@ -58,10 +59,20 @@ export default function CustomerTableRow({
         </select>
       </td>
       <td>
-        {customer.gallon > 0 ? (
+        {customer.gallonSlim > 0 ? (
           <span className="borrow-badge borrow-badge-gallon">
             <span className="material-icons-outlined">water_drop</span>
-            {customer.gallon}
+            {customer.gallonSlim}
+          </span>
+        ) : (
+          <span style={{ color: 'hsl(var(--border))' }}>--</span>
+        )}
+      </td>
+      <td>
+        {customer.gallonPoly > 0 ? (
+          <span className="borrow-badge borrow-badge-gallon">
+            <span className="material-icons-outlined">water_drop</span>
+            {customer.gallonPoly}
           </span>
         ) : (
           <span style={{ color: 'hsl(var(--border))' }}>--</span>
