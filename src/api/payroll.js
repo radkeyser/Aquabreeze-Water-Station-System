@@ -246,6 +246,36 @@ export async function chargeDebtsForStaff(staffName) {
   return data;
 }
 
+export async function getPayrollHistory() {
+  const { data, error } = await supabase
+    .from('payroll_history')
+    .select('*')
+    .order('date_released', { ascending: false })
+    .order('time_released', { ascending: false });
+
+  if (error) throw error;
+
+  return (data || []).map((row) => ({
+    id: row.id,
+    staffId: row.staff_id,
+    staffName: row.staff_name,
+    role: row.role || '',
+    daysWorked: Number(row.days_worked) || 0,
+    dailyRate: Number(row.daily_rate) || 0,
+    advance: Number(row.advance) || 0,
+    commission: Number(row.commission) || 0,
+    debtCharge: Number(row.debt_charge) || 0,
+    sss: Number(row.sss) || 0,
+    pagibig: Number(row.pagibig) || 0,
+    philhealth: Number(row.philhealth) || 0,
+    expectedSalary: Number(row.expected_salary) || 0,
+    releasedPautang: Array.isArray(row.released_pautang) ? row.released_pautang : [],
+    releasedCommissions: Array.isArray(row.released_commissions) ? row.released_commissions : [],
+    dateReleased: row.date_released ? formatDate(row.date_released) : '',
+    timeReleased: row.time_released ? formatTime(row.time_released) : '',
+  }));
+}
+
 export { getShiftStatus, payPautang } from './pautang.js';
 
 export default {
@@ -263,4 +293,5 @@ export default {
   chargeDebtsForStaff,
   calcExpected,
   setHoursWorked,
+  getPayrollHistory,
 };

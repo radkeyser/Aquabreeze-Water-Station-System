@@ -149,6 +149,8 @@ declare
   v_date date := (v_now at time zone 'Asia/Manila')::date;
   v_time time := (v_now at time zone 'Asia/Manila')::time;
   v_cd_id text;
+  v_released_pautang jsonb;
+  v_released_commissions jsonb;
 begin
   select * into v_row from payroll where staff_id = p_staff_id;
   if not found then return jsonb_build_object('success', false, 'message', 'Staff not found.'); end if;
@@ -159,6 +161,26 @@ begin
   v_cd_id := public.next_id('CD'::text);
   insert into cash_drawer (id, date, time, type, order_id, customer_id, description, amount, point_person, shift_id)
   values (v_cd_id, v_date, v_time, 'out', '', p_staff_id, 'Salary Release - ' || v_row.name, v_expected, v_row.name, v_shift_id);
+
+  -- Snapshot everything that's about to be cleared, so it can be looked
+  -- back on later even though the live pautang/commissions rows are removed.
+  select coalesce(jsonb_agg(to_jsonb(p)), '[]'::jsonb) into v_released_pautang
+  from pautang p
+  where lower(trim(coalesce(p.point_person, ''))) = lower(trim(v_row.name)) and lower(coalesce(p.charge_status, 'No')) = 'yes';
+
+  select coalesce(jsonb_agg(to_jsonb(c)), '[]'::jsonb) into v_released_commissions
+  from commissions c
+  where lower(trim(coalesce(c.point_person, ''))) = lower(trim(v_row.name));
+
+  insert into payroll_history (
+    staff_id, staff_name, role, days_worked, daily_rate, advance, commission,
+    debt_charge, sss, pagibig, philhealth, expected_salary,
+    released_pautang, released_commissions, date_released, time_released
+  ) values (
+    p_staff_id, v_row.name, v_row.role, v_row.days_worked, v_row.daily_rate, v_row.advance, v_row.commission,
+    v_row.debt_charge, v_row.sss, v_row.pagibig, v_row.philhealth, v_expected,
+    v_released_pautang, v_released_commissions, v_date, v_time
+  );
 
   delete from pautang
   where lower(trim(coalesce(point_person, ''))) = lower(trim(v_row.name)) and lower(coalesce(charge_status, 'No')) = 'yes';
@@ -172,6 +194,9 @@ begin
 
   return jsonb_build_object('success', true, 'message', 'Salary released for ' || v_row.name || '!');
 end; $$;
+
+grant execute on function release_pay(text) to anon;
+grant execute on function release_pay(text) to authenticated;
 
 create or replace function clear_payroll_rows(p_staff_ids text[])
 returns jsonb language plpgsql security definer set search_path = public as $$
