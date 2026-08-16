@@ -635,3 +635,89 @@
 .payroll-tab:hover { color: var(--primary); }
 .payroll-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 .payroll-tab .material-icons-outlined { font-size: 17px; }
+
+.commission-group {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.commission-group-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border: none;
+  background: var(--card);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background var(--transition);
+}
+.commission-group-head:hover { background: var(--muted); }
+.commission-group-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.commission-group-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.commission-group-name { font-weight: 700; font-size: 14px; color: var(--fg); }
+.commission-group-sub { font-size: 12px; color: var(--muted-fg); margin-top: 1px; }
+.commission-group-totals {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+}
+.commission-total-item {
+  text-align: right;
+}
+.commission-total-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-fg);
+}
+.commission-total-val { font-size: 15px; font-weight: 800; }
+.commission-total-payable { color: hsl(150, 40%, 32%); }
+.commission-total-locked { color: var(--destructive); }
+.commission-group-chevron { color: var(--muted-fg); font-size: 22px; flex-shrink: 0; }
+
+.commission-group-body {
+  border-top: 1px solid var(--border);
+  padding: 14px 18px 18px;
+}
+.commission-rate-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 10px 14px;
+  background: var(--muted);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--muted-fg);
+}
+.commission-table-wrap { overflow-x: auto; }
+
+@media (max-width: 640px) {
+  .commission-group-head { flex-wrap: wrap; }
+  .commission-group-totals { width: 100%; justify-content: space-between; }
+}

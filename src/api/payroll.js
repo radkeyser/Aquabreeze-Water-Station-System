@@ -246,6 +246,65 @@ export async function chargeDebtsForStaff(staffName) {
   return data;
 }
 
+export async function getCommissionsDetail() {
+  const [commRes, staffRes] = await Promise.all([
+    supabase.from('commissions').select('*').order('date', { ascending: false }),
+    supabase.from('staff').select('*'),
+  ]);
+
+  if (commRes.error) throw commRes.error;
+  if (staffRes.error) throw staffRes.error;
+
+  const staffMap = {};
+  (staffRes.data || []).forEach((s) => {
+    staffMap[String(s.name || '').trim().toLowerCase()] = s;
+  });
+
+  const groups = {};
+  (commRes.data || []).forEach((row) => {
+    const name = String(row.point_person || '').trim();
+    if (!name) return;
+    const key = name.toLowerCase();
+    if (!groups[key]) {
+      const info = staffMap[key] || {};
+      groups[key] = {
+        name,
+        role: info.role || '',
+        type: info.type || 'Salary-Based',
+        commission5Gal: Number(info.commission_5gal) || 0,
+        commission1000mL: Number(info.commission_1000ml) || 0,
+        commission500mL: Number(info.commission_500ml) || 0,
+        commissionSlim: Number(info.commission_slim) || 0,
+        entries: [],
+        payableTotal: 0,
+        lockedTotal: 0,
+      };
+    }
+    const amount = Number(row.total_commission) || 0;
+    const delivered = row.delivered === 'Delivered';
+    groups[key].entries.push({
+      orderId: row.order_id,
+      date: formatDate(row.date),
+      customerName: row.customer_name || '',
+      location: row.location || '',
+      product: row.product || '',
+      quantity: Number(row.quantity) || 0,
+      amount,
+      delivered: row.delivered || 'Undelivered',
+    });
+    if (delivered) groups[key].payableTotal += amount;
+    else groups[key].lockedTotal += amount;
+  });
+
+  const result = Object.values(groups).map((g) => ({
+    ...g,
+    entries: g.entries.sort((a, b) => new Date(b.date) - new Date(a.date)),
+  }));
+
+  result.sort((a, b) => a.name.localeCompare(b.name));
+  return result;
+}
+
 export async function getPayrollHistory() {
   const { data, error } = await supabase
     .from('payroll_history')
@@ -294,4 +353,5 @@ export default {
   calcExpected,
   setHoursWorked,
   getPayrollHistory,
+  getCommissionsDetail,
 };

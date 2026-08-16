@@ -20,6 +20,7 @@ import {
 } from '../../../api/payroll.js';
 import { formatPeso } from '../../../utils/format.js';
 import PayrollHistoryTab from './PayrollHistoryTab.jsx';
+import CommissionsTab from './CommissionsTab.jsx';
 import './payroll.css';
 
 function Modal({ open, onClose, title, children, maxWidth = 460 }) {
@@ -600,10 +601,15 @@ export default function PayrollPage() {
         <button type="button" className={`payroll-tab${activeTab === 'history' ? ' active' : ''}`} onClick={() => setActiveTab('history')}>
           <span className="material-icons-outlined">history</span> History
         </button>
+        <button type="button" className={`payroll-tab${activeTab === 'commissions' ? ' active' : ''}`} onClick={() => setActiveTab('commissions')}>
+          <span className="material-icons-outlined">percent</span> Commissions
+        </button>
       </div>
 
       {activeTab === 'history' ? (
         <PayrollHistoryTab />
+      ) : activeTab === 'commissions' ? (
+        <CommissionsTab />
       ) : (
         <>
       {error && (
