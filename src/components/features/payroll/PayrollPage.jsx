@@ -19,6 +19,7 @@ import {
   updatePayroll,
 } from '../../../api/payroll.js';
 import { formatPeso } from '../../../utils/format.js';
+import PayrollHistoryTab from './PayrollHistoryTab.jsx';
 import './payroll.css';
 
 function Modal({ open, onClose, title, children, maxWidth = 460 }) {
@@ -127,6 +128,7 @@ function MaskedCell({ revealed, children, maskId, valId }) {
 }
 
 export default function PayrollPage() {
+  const [activeTab, setActiveTab] = useState('payroll');
   const [employees, setEmployees] = useState([]);
   const [roles, setRoles] = useState([]);
   const [shiftOpen, setShiftOpen] = useState(false);
@@ -591,6 +593,19 @@ export default function PayrollPage() {
 
   return (
     <div className="page-content payroll-page">
+      <div className="payroll-tab-bar">
+        <button type="button" className={`payroll-tab${activeTab === 'payroll' ? ' active' : ''}`} onClick={() => setActiveTab('payroll')}>
+          <span className="material-icons-outlined">people</span> Payroll
+        </button>
+        <button type="button" className={`payroll-tab${activeTab === 'history' ? ' active' : ''}`} onClick={() => setActiveTab('history')}>
+          <span className="material-icons-outlined">history</span> History
+        </button>
+      </div>
+
+      {activeTab === 'history' ? (
+        <PayrollHistoryTab />
+      ) : (
+        <>
       {error && (
         <div className="shift-warning-banner" style={{ background: 'var(--destructive-light)', borderColor: 'var(--destructive)', color: 'var(--destructive)' }}>
           <span className="material-icons-outlined">error_outline</span>
@@ -1265,6 +1280,9 @@ export default function PayrollPage() {
           </button>
         </div>
       </Modal>
+
+      </>
+      )}
 
       {/* Charge Debt Pay */}
       <Modal open={chargeDebtPayOpen} onClose={() => setChargeDebtPayOpen(false)} title="Record Payment">
