@@ -6,6 +6,7 @@ import CashDrawerPage from '../components/features/cashDrawer/CashDrawerPage.jsx
 import InventoryPage from '../components/features/inventory/InventoryPage.jsx';
 import CashManagementPage from '../components/features/cashManagement/CashManagementPage.jsx';
 import LogbookPage from '../components/features/logbook/LogbookPage.jsx';
+import RemitPage from '../components/features/remit/RemitPage.jsx';
 import PautangPage from '../components/features/pautang/PautangPage.jsx';
 import CustomersPage from '../components/features/customers/CustomersPage.jsx';
 import PayrollPage from '../components/features/payroll/PayrollPage.jsx';
@@ -26,6 +27,7 @@ export const NAV_ITEMS = [
   { key: 'cash-drawer', path: '/cash-drawer', label: 'Cash Drawer', icon: 'account_balance_wallet', element: CashDrawerPage },
   { key: 'pos', path: '/pos', label: 'Point of Sale', icon: 'shopping_cart', element: POSPage },
   { key: 'logbook', path: '/logbook', label: 'Logbook', icon: 'menu_book', element: LogbookPage },
+  { key: 'remit', path: '/remit', label: 'Remit', icon: 'move_to_inbox', element: RemitPage },
   { key: 'pautang', path: '/pautang', label: 'Pautang', icon: 'payments', element: PautangPage },
   { key: 'customers', path: '/customers', label: 'Customers', icon: 'people', element: CustomersPage },
   { key: 'payroll', path: '/payroll', label: 'Payroll', icon: 'receipt_long', element: PayrollPage },
