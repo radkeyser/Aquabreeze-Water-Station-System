@@ -76,13 +76,23 @@ export default function DashboardPage() {
   return (
     <div className="dash-wrapper">
       <div className="dash-stat-row">
-        {STATS.map((s, i) => {
+                {STATS.map((s, i) => {
           const Icon = s.icon;
+          const statValues = {
+            sales: processed?.totalSales,
+            orders: processed?.totalOrders,
+            expenses: processed?.totalExpense,
+            pautang: processed?.totalUtang,
+            collections: processed?.totalCollect,
+            advances: processed?.totalAdv,
+          };
+          const rawVal = statValues[s.key];
+          const displayVal = s.key === 'orders' ? (rawVal ?? '—') : formatPeso(rawVal || 0);
           return (
             <div key={s.key} id={`dashStat${i}`} className={`dash-stat-card dash-stat-${s.color}`}>
               <div className="dash-stat-icon"><span className="material-icons-outlined">{Icon}</span></div>
               <div className="dash-stat-info">
-                <div className="dash-stat-val">{processed ? formatPeso(processed.totalSales || 0) : '—'}</div>
+                <div className="dash-stat-val">{processed ? displayVal : '—'}</div>
                 <div className="dash-stat-label">{s.label}</div>
               </div>
             </div>
@@ -162,7 +172,7 @@ export default function DashboardPage() {
           <div className="dash-charts-grid">
             {[
               { key: 'qtyByDate', icon: 'local_drink', title: 'Product Quantity Sold by Date', full: true, node: (
-                <ResponsiveContainer width="100%" height={360}>
+                <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={processed?.salesTrend || []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f3" />
                     <XAxis dataKey="date" tick={{ fontSize:12 }} />
@@ -173,7 +183,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               )},
               { key: 'statusPie', icon: 'show_chart', title: 'Order Status Breakdown', node: (
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
                     <Pie data={processed?.statusPie || []} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90} label paddingAngle={2}>
                       {(processed?.statusPie || []).map((entry, idx) => (
@@ -185,7 +195,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               )},
               { key: 'salesByPP', icon: 'people', title: 'Sales by Point Person', node: (
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={280}>
                   <ReBarChart data={processed?.salesByPP || []} barSize={12} barCategoryGap="20%">
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f3" />
                     <XAxis dataKey="name" tick={{ fontSize:12 }} />
@@ -196,7 +206,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               )},
               { key: 'advByPP', icon: 'savings', title: 'Point Person Advances', node: (
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={280}>
                   <ReBarChart data={processed?.advByPP || []} barSize={12} barCategoryGap="20%">
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f3" />
                     <XAxis dataKey="name" tick={{ fontSize:12 }} />
@@ -207,7 +217,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               )},
               { key: 'salesVsExp', icon: 'swap_horiz', title: 'Sales vs Expenses', node: (
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={280}>
                   <ReBarChart data={processed?.salesVsExpenses || []} barSize={12} barCategoryGap="20%">
                     <CartesianGrid strokeDasharray="3 3" stroke="#eef2f3" />
                     <XAxis dataKey="date" tick={{ fontSize:12 }} />
@@ -219,7 +229,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               )},
               { key: 'expBreak', icon: 'pie_chart', title: 'Expense Breakdown', node: (
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
                     <Pie data={processed?.expBreakdown || []} dataKey="value" nameKey="name" outerRadius={90} label paddingAngle={2}>
                       {(processed?.expBreakdown || []).map((entry, idx) => (
@@ -231,7 +241,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               )},
               { key: 'ppPautang', icon: 'account_balance_wallet', title: 'Point Person — Pautang vs Collections', node: (
-                <ResponsiveContainer width="100%" height={240}>
+                <ResponsiveContainer width="100%" height={280}>
                   <ReBarChart data={processed?.ppPautangVsCollect || []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />

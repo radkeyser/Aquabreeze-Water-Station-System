@@ -456,12 +456,12 @@ body {
 .dash-card-tfoot { padding: 0px; }
 .dash-card-tfoot .total { font-weight:800; }
 .dash-mini-empty { text-align:center !important; padding:20px !important; color: var(--muted-fg); font-style:italic; font-size:14px; }
-.dash-charts-grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; overflow-y:auto; padding-bottom:8px; height:100%; }
+.dash-charts-grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; overflow-y:auto; padding-bottom:8px; height:100%; align-content:start; }
 .dash-chart-full { grid-column: 1 / -1; }
-.dash-chart-card { background: rgb(255,255,255); border:1px solid rgb(238,241,245); border-radius: var(--radius-lg); box-shadow: var(--shadow); display:flex; flex-direction:column; overflow:hidden; min-height:240px; }
+.dash-chart-card { background: rgb(255,255,255); border:1px solid rgb(238,241,245); border-radius: var(--radius-lg); box-shadow: var(--shadow); display:flex; flex-direction:column; overflow:hidden; height:340px; flex-shrink:0; }
 .dash-chart-title { flex-shrink:0; display:flex; align-items:center; gap:6px; padding:9px 14px; font-size:12px; font-weight:700; color: var(--fg); border-bottom:1px solid rgb(238,241,245); background: var(--muted); }
 .dash-chart-title .material-icons-outlined { font-size:15px; color: var(--primary); }
-.dash-chart-wrap { flex:1; min-height:0; padding:14px; position:relative; }
+.dash-chart-wrap { flex:1; min-height:0; padding:14px; position:relative; overflow:hidden; }
 .dash-chart-wrap canvas { width:100% !important; height:100% !important; }
 
 /* GCASH SHARED POS PAUTANG CUSTOMERS */
