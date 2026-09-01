@@ -171,29 +171,47 @@ function RemitWorklist() {
       </div>
 
       <div className="remit-toolbar">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search customer, order ID, point person..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <select className="filter-person-select" value={ppFilter} onChange={(e) => setPpFilter(e.target.value)}>
-          <option value="">All Point Persons</option>
-          {staffList.map((name) => <option key={name} value={name}>{name}</option>)}
-        </select>
-        <select className="filter-person-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">All Status</option>
-          <option value="paid">Paid</option>
-          <option value="partial">Partial</option>
-          <option value="utang">Utang</option>
-        </select>
-        <div className="remit-date-tabs">
-          {['today', 'yesterday', 'all'].map((val) => (
-            <button key={val} type="button" className={`filter-tab${dateFilter === val ? ' active' : ''}`} onClick={() => setDateFilter(val)}>
-              {val === 'today' ? 'Today' : val === 'yesterday' ? 'Yesterday' : 'All'}
+        <div className="remit-toolbar-row remit-toolbar-row-main">
+          <div className="remit-search-wrap">
+            <span className="material-icons-outlined remit-search-icon">search</span>
+            <input
+              type="text"
+              className="search-input remit-search-input"
+              placeholder="Search customer, order ID, point person..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button type="button" className="remit-search-clear" onClick={() => setSearch('')}>
+                <span className="material-icons-outlined">close</span>
+              </button>
+            )}
+          </div>
+          <div className="remit-date-tabs">
+            {['today', 'yesterday', 'all'].map((val) => (
+              <button key={val} type="button" className={`filter-tab${dateFilter === val ? ' active' : ''}`} onClick={() => setDateFilter(val)}>
+                {val === 'today' ? 'Today' : val === 'yesterday' ? 'Yesterday' : 'All'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="remit-toolbar-row remit-toolbar-row-sub">
+          <span className="remit-toolbar-label"><span className="material-icons-outlined">tune</span>Filters</span>
+          <select className="filter-person-select remit-select" value={ppFilter} onChange={(e) => setPpFilter(e.target.value)}>
+            <option value="">All Point Persons</option>
+            {staffList.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
+          <select className="filter-person-select remit-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">All Status</option>
+            <option value="paid">Paid</option>
+            <option value="partial">Partial</option>
+            <option value="utang">Utang</option>
+          </select>
+          {(ppFilter || statusFilter) && (
+            <button type="button" className="remit-clear-filters" onClick={() => { setPpFilter(''); setStatusFilter(''); }}>
+              <span className="material-icons-outlined">filter_alt_off</span> Clear
             </button>
-          ))}
+          )}
         </div>
       </div>
 

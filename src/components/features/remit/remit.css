@@ -1,10 +1,89 @@
 .remit-toolbar {
-  display: flex;
-  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px 12px;
   margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.remit-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex-wrap: wrap;
 }
-.remit-toolbar .search-input { flex: 1; min-width: 200px; }
+.remit-toolbar-row-sub {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.remit-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+}
+.remit-search-icon {
+  position: absolute;
+  left: 12px;
+  font-size: 18px;
+  color: var(--muted-fg);
+  pointer-events: none;
+}
+.remit-search-input {
+  width: 100%;
+  padding-left: 38px;
+  padding-right: 32px;
+}
+.remit-search-clear {
+  position: absolute;
+  right: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--muted-fg);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+.remit-search-clear:hover { color: var(--fg); }
+.remit-search-clear .material-icons-outlined { font-size: 16px; }
+
+.remit-toolbar-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted-fg);
+  flex-shrink: 0;
+}
+.remit-toolbar-label .material-icons-outlined { font-size: 15px; }
+
+.remit-select {
+  min-width: 160px;
+}
+
+.remit-clear-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: none;
+  background: none;
+  color: var(--destructive);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 8px;
+  margin-left: auto;
+}
+.remit-clear-filters:hover { text-decoration: underline; }
+.remit-clear-filters .material-icons-outlined { font-size: 15px; }
 
 .remit-btn {
   display: inline-flex;
@@ -52,7 +131,14 @@
 .remit-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 .remit-tab .material-icons-outlined { font-size: 17px; }
 
-.remit-date-tabs { display: flex; gap: 4px; }
+.remit-date-tabs {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  background: var(--muted);
+  padding: 3px;
+  border-radius: var(--radius);
+}
 
 .remit-person-grid {
   display: grid;
