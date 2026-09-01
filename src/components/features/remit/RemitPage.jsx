@@ -36,9 +36,9 @@ function RemitWorklist() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('unpaid');
   const [ppFilter, setPpFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState('today');
+  const [dateFilter, setDateFilter] = useState('all');
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
   const [page, setPage] = useState(1);
@@ -76,7 +76,9 @@ function RemitWorklist() {
 
     let list = rows.filter((r) => {
       const matchQ = !q || r.customerName.toLowerCase().includes(q) || r.orderId.toLowerCase().includes(q) || r.pointPerson.toLowerCase().includes(q);
-      const matchStatus = !statusFilter || r.paymentStatus.toLowerCase() === statusFilter;
+      const matchStatus = statusFilter === 'unpaid'
+        ? r.paymentStatus.toLowerCase() !== 'paid'
+        : r.paymentStatus.toLowerCase() === statusFilter;
       const matchPP = !ppFilter || r.pointPerson.toLowerCase() === ppFilter.toLowerCase();
       const matchDate = dateFilter === 'all' || (dateFilter === 'today' ? r.deliveredDate === today : r.deliveredDate === yesterday);
       return matchQ && matchStatus && matchPP && matchDate;
@@ -220,13 +222,11 @@ function RemitWorklist() {
             {staffList.map((name) => <option key={name} value={name}>{name}</option>)}
           </select>
           <select className="filter-person-select remit-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">All Status</option>
+            <option value="unpaid">Partial/Utang</option>
             <option value="paid">Paid</option>
-            <option value="partial">Partial</option>
-            <option value="utang">Utang</option>
           </select>
-          {(ppFilter || statusFilter) && (
-            <button type="button" className="remit-clear-filters" onClick={() => { setPpFilter(''); setStatusFilter(''); }}>
+          {(ppFilter || statusFilter !== 'unpaid') && (
+            <button type="button" className="remit-clear-filters" onClick={() => { setPpFilter(''); setStatusFilter('unpaid'); }}>
               <span className="material-icons-outlined">filter_alt_off</span> Clear
             </button>
           )}
@@ -471,7 +471,7 @@ function RemitByPersonTab() {
   const [historyRows, setHistoryRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [dateFilter, setDateFilter] = useState('today');
+  const [dateFilter, setDateFilter] = useState('all');
 
   useEffect(() => {
     let mounted = true;
