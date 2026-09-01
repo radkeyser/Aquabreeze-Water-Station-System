@@ -42,7 +42,7 @@ function RemitWorklist() {
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 10;
+  const [pageSize, setPageSize] = useState(10);
 
   const [payTarget, setPayTarget] = useState(null);
   const [payAmount, setPayAmount] = useState('');
@@ -96,14 +96,21 @@ function RemitWorklist() {
 
   const totalOutstanding = useMemo(() => filtered.reduce((s, r) => s + r.balance, 0), [filtered]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageData = useMemo(
-    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [filtered, currentPage]
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize]
   );
+  const rangeStart = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(currentPage * pageSize, filtered.length);
 
-  useEffect(() => { setPage(1); }, [search, statusFilter, ppFilter, dateFilter, sortCol, sortDir]);
+  useEffect(() => { setPage(1); }, [search, statusFilter, ppFilter, dateFilter, sortCol, sortDir, pageSize]);
+
+  function handlePageInput(e) {
+    const val = parseInt(e.target.value, 10);
+    if (!Number.isNaN(val) && val >= 1 && val <= totalPages) setPage(val);
+  }
 
   const todaysSummary = useMemo(() => {
     const today = todayISO();
@@ -281,15 +288,31 @@ function RemitWorklist() {
             </tbody>
           </table>
         </div>
-        {filtered.length > PAGE_SIZE && (
+        {filtered.length > 0 && (
           <div className="remit-paginator">
-            <button type="button" className="remit-page-btn" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>
-              <span className="material-icons-outlined">chevron_left</span>
-            </button>
-            <span className="remit-page-info">Page {currentPage} of {totalPages}</span>
-            <button type="button" className="remit-page-btn" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>
-              <span className="material-icons-outlined">chevron_right</span>
-            </button>
+            <span className="remit-paginator-info">Showing {rangeStart}–{rangeEnd} of {filtered.length} results</span>
+            <div className="remit-paginator-controls">
+              <select className="remit-page-size-select" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+                <option value={10}>10 / page</option>
+                <option value={25}>25 / page</option>
+                <option value={50}>50 / page</option>
+              </select>
+              <button type="button" className="remit-page-btn" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>
+                <span className="material-icons-outlined">chevron_left</span>
+              </button>
+              <input
+                type="number"
+                className="remit-page-input"
+                value={currentPage}
+                min={1}
+                max={totalPages}
+                onChange={handlePageInput}
+              />
+              <span className="remit-paginator-of">of {totalPages}</span>
+              <button type="button" className="remit-page-btn" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                <span className="material-icons-outlined">chevron_right</span>
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -499,12 +522,15 @@ function RemitByPersonTab() {
       )}
 
       <div className="remit-toolbar">
-        <div className="remit-date-tabs">
-          {['today', 'yesterday', 'all'].map((val) => (
-            <button key={val} type="button" className={`filter-tab${dateFilter === val ? ' active' : ''}`} onClick={() => setDateFilter(val)}>
-              {val === 'today' ? 'Today' : val === 'yesterday' ? 'Yesterday' : 'All'}
-            </button>
-          ))}
+        <div className="remit-toolbar-row">
+          <span className="remit-toolbar-label"><span className="material-icons-outlined">event</span>Period</span>
+          <div className="remit-date-tabs">
+            {['today', 'yesterday', 'all'].map((val) => (
+              <button key={val} type="button" className={`filter-tab${dateFilter === val ? ' active' : ''}`} onClick={() => setDateFilter(val)}>
+                {val === 'today' ? 'Today' : val === 'yesterday' ? 'Yesterday' : 'All'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
