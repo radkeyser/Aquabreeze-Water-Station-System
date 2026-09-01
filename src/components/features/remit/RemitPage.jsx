@@ -41,6 +41,8 @@ function RemitWorklist() {
   const [dateFilter, setDateFilter] = useState('today');
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const [payTarget, setPayTarget] = useState(null);
   const [payAmount, setPayAmount] = useState('');
@@ -93,6 +95,15 @@ function RemitWorklist() {
   }, [rows, search, statusFilter, ppFilter, dateFilter, sortCol, sortDir]);
 
   const totalOutstanding = useMemo(() => filtered.reduce((s, r) => s + r.balance, 0), [filtered]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageData = useMemo(
+    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filtered, currentPage]
+  );
+
+  useEffect(() => { setPage(1); }, [search, statusFilter, ppFilter, dateFilter, sortCol, sortDir]);
 
   const todaysSummary = useMemo(() => {
     const today = todayISO();
@@ -240,7 +251,7 @@ function RemitWorklist() {
               {!loading && filtered.length === 0 && (
                 <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40, color: 'var(--muted-fg)' }}>No delivered orders found.</td></tr>
               )}
-              {!loading && filtered.map((r) => (
+              {!loading && pageData.map((r) => (
                 <tr key={r.orderId}>
                   <td data-label="Order ID" style={{ fontSize: 12, color: 'var(--muted-fg)' }}>{r.orderId}</td>
                   <td data-label="Date Delivered"><div>{r.deliveredDateDisplay || '--'}</div><div style={{ fontSize: 11, color: 'var(--muted-fg)' }}>{r.deliveredTime}</div></td>
@@ -270,6 +281,17 @@ function RemitWorklist() {
             </tbody>
           </table>
         </div>
+        {filtered.length > PAGE_SIZE && (
+          <div className="remit-paginator">
+            <button type="button" className="remit-page-btn" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>
+              <span className="material-icons-outlined">chevron_left</span>
+            </button>
+            <span className="remit-page-info">Page {currentPage} of {totalPages}</span>
+            <button type="button" className="remit-page-btn" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>
+              <span className="material-icons-outlined">chevron_right</span>
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={`pay-modal-overlay${payTarget ? ' show' : ''}`}>

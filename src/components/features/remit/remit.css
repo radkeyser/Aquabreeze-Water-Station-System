@@ -165,3 +165,32 @@
 .remit-person-stat-val { font-size: 13px; font-weight: 700; }
 .remit-person-stat-success { color: hsl(150, 40%, 32%); }
 .remit-person-stat-danger { color: var(--destructive); }
+
+.remit-paginator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 14px 0 6px;
+  border-top: 1px solid var(--border);
+}
+.remit-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--fg);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.remit-page-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+.remit-page-btn:disabled { opacity: 0.4; cursor: default; }
+.remit-page-info {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted-fg);
+}
