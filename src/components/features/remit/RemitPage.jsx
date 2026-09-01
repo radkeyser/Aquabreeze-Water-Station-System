@@ -110,12 +110,17 @@ function RemitWorklist() {
     if (!Number.isNaN(val) && val >= 1 && val <= totalPages) setPage(val);
   }
 
+  const summaryLabel = dateFilter === 'today' ? 'Today' : dateFilter === 'yesterday' ? 'Yesterday' : 'All Time';
+
   const todaysSummary = useMemo(() => {
     const today = todayISO();
-    const todayRows = rows.filter((r) => r.deliveredDate === today);
-    const fullyRemitted = todayRows.filter((r) => r.paymentStatus === 'Paid').length;
-    return { total: todayRows.length, fullyRemitted, outstanding: todayRows.length - fullyRemitted };
-  }, [rows]);
+    const yesterday = yesterdayISO();
+    const scopedRows = dateFilter === 'all'
+      ? rows
+      : rows.filter((r) => r.deliveredDate === (dateFilter === 'today' ? today : yesterday));
+    const fullyRemitted = scopedRows.filter((r) => r.paymentStatus === 'Paid').length;
+    return { total: scopedRows.length, fullyRemitted, outstanding: scopedRows.length - fullyRemitted };
+  }, [rows, dateFilter]);
 
   function openPay(row) {
     setPayTarget(row);
@@ -166,14 +171,14 @@ function RemitWorklist() {
         <div className="summary-card">
           <div className="summary-icon primary"><span className="material-icons-outlined">local_shipping</span></div>
           <div>
-            <div className="summary-label">Delivered Today</div>
+            <div className="summary-label">Delivered ({summaryLabel})</div>
             <div className="summary-value">{todaysSummary.total}</div>
           </div>
         </div>
         <div className="summary-card">
           <div className="summary-icon success"><span className="material-icons-outlined">check_circle</span></div>
           <div>
-            <div className="summary-label">Fully Remitted Today</div>
+            <div className="summary-label">Fully Remitted ({summaryLabel})</div>
             <div className="summary-value">{todaysSummary.fullyRemitted} / {todaysSummary.total}</div>
           </div>
         </div>
