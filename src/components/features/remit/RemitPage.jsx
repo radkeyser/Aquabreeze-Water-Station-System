@@ -18,13 +18,9 @@ export default function RemitPage() {
         <button type="button" className={`remit-tab${tab === 'history' ? ' active' : ''}`} onClick={() => setTab('history')}>
           <span className="material-icons-outlined">history</span> History
         </button>
-        <button type="button" className={`remit-tab${tab === 'byperson' ? ' active' : ''}`} onClick={() => setTab('byperson')}>
-          <span className="material-icons-outlined">groups</span> By Point Person
-        </button>
       </div>
       {tab === 'remit' && <RemitWorklist />}
       {tab === 'history' && <RemitHistoryTab />}
-      {tab === 'byperson' && <RemitByPersonTab />}
     </div>
   );
 }
@@ -360,9 +356,14 @@ function RemitWorklist() {
 // ─────────────────────────── Tab 2: History ───────────────────────────
 function RemitHistoryTab() {
   const [rows, setRows] = useState([]);
+  const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [ppFilter, setPpFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     let mounted = true;
@@ -370,8 +371,8 @@ function RemitHistoryTab() {
       setLoading(true);
       setError('');
       try {
-        const data = await getRemitHistory();
-        if (mounted) setRows(data);
+        const [data, staff] = await Promise.all([getRemitHistory(), getPointPersonList()]);
+        if (mounted) { setRows(data); setStaffList(staff); }
       } catch (err) {
         if (mounted) setError(err?.message || 'Failed to load history.');
       } finally {
@@ -383,11 +384,33 @@ function RemitHistoryTab() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => r.customerName.toLowerCase().includes(q) || r.orderId.toLowerCase().includes(q) || r.pointPerson.toLowerCase().includes(q));
-  }, [rows, search]);
+    const today = todayISO();
+    const yesterday = yesterdayISO();
+    return rows.filter((r) => {
+      const matchQ = !q || r.customerName.toLowerCase().includes(q) || r.orderId.toLowerCase().includes(q) || r.pointPerson.toLowerCase().includes(q);
+      const matchDate = dateFilter === 'all' || (dateFilter === 'today' ? r.rawDate === today : r.rawDate === yesterday);
+      const matchPP = !ppFilter || r.pointPerson.toLowerCase() === ppFilter.toLowerCase();
+      return matchQ && matchDate && matchPP;
+    });
+  }, [rows, search, dateFilter, ppFilter]);
 
   const total = useMemo(() => filtered.reduce((s, r) => s + r.amount, 0), [filtered]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageData = useMemo(
+    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filtered, currentPage, pageSize]
+  );
+  const rangeStart = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(currentPage * pageSize, filtered.length);
+
+  useEffect(() => { setPage(1); }, [search, dateFilter, ppFilter, pageSize]);
+
+  function handlePageInput(e) {
+    const val = parseInt(e.target.value, 10);
+    if (!Number.isNaN(val) && val >= 1 && val <= totalPages) setPage(val);
+  }
 
   return (
     <div>
@@ -416,7 +439,20 @@ function RemitHistoryTab() {
       </div>
 
       <div className="remit-toolbar">
-        <input type="text" className="search-input" placeholder="Search customer, order ID, point person..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="remit-toolbar-row">
+          <input type="text" className="search-input" style={{ flex: 1, minWidth: 220 }} placeholder="Search customer, order ID, point person..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <select className="filter-person-select remit-select" value={ppFilter} onChange={(e) => setPpFilter(e.target.value)}>
+            <option value="">All Point Persons</option>
+            {staffList.map((name) => <option key={name} value={name}>{name}</option>)}
+          </select>
+          <div className="remit-date-tabs" style={{ marginLeft: 'auto' }}>
+            {['today', 'yesterday', 'all'].map((val) => (
+              <button key={val} type="button" className={`filter-tab${dateFilter === val ? ' active' : ''}`} onClick={() => setDateFilter(val)}>
+                {val === 'today' ? 'Today' : val === 'yesterday' ? 'Yesterday' : 'All'}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="card remit-card">
@@ -440,7 +476,7 @@ function RemitHistoryTab() {
               {!loading && filtered.length === 0 && (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted-fg)' }}>No remit history yet.</td></tr>
               )}
-              {!loading && filtered.map((r) => (
+              {!loading && pageData.map((r) => (
                 <tr key={r.id}>
                   <td data-label="Date"><div>{r.date}</div><div style={{ fontSize: 11, color: 'var(--muted-fg)' }}>{r.time}</div></td>
                   <td data-label="Order ID" style={{ fontSize: 12, color: 'var(--muted-fg)' }}>{r.orderId}</td>
@@ -460,109 +496,35 @@ function RemitHistoryTab() {
             </tbody>
           </table>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────── Tab 3: By Point Person ───────────────────────────
-function RemitByPersonTab() {
-  const [remitRows, setRemitRows] = useState([]);
-  const [historyRows, setHistoryRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [dateFilter, setDateFilter] = useState('all');
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const [remit, history] = await Promise.all([getRemitData(), getRemitHistory()]);
-        if (mounted) { setRemitRows(remit); setHistoryRows(history); }
-      } catch (err) {
-        if (mounted) setError(err?.message || 'Failed to load summary.');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => { mounted = false; };
-  }, []);
-
-  const groups = useMemo(() => {
-    const today = todayISO();
-    const yesterday = yesterdayISO();
-    const matchDate = (d) => (dateFilter === 'all' ? true : dateFilter === 'today' ? d === today : d === yesterday);
-
-    const byPerson = {};
-    remitRows.filter((r) => matchDate(r.deliveredDate)).forEach((r) => {
-      const key = r.pointPerson || 'No Point Person';
-      if (!byPerson[key]) byPerson[key] = { name: key, delivered: 0, deliveredValue: 0, remitted: 0, outstanding: 0 };
-      byPerson[key].delivered += 1;
-      byPerson[key].deliveredValue += r.total;
-      byPerson[key].outstanding += r.balance;
-    });
-    historyRows.filter((r) => matchDate(r.rawDate)).forEach((r) => {
-      const key = r.pointPerson || 'No Point Person';
-      if (!byPerson[key]) byPerson[key] = { name: key, delivered: 0, deliveredValue: 0, remitted: 0, outstanding: 0 };
-      byPerson[key].remitted += r.amount;
-    });
-
-    return Object.values(byPerson).sort((a, b) => a.name.localeCompare(b.name));
-  }, [remitRows, historyRows, dateFilter]);
-
-  return (
-    <div>
-      {error && (
-        <div className="shift-warning-banner" style={{ background: 'var(--destructive-light)', borderColor: 'var(--destructive)', color: 'var(--destructive)' }}>
-          <span className="material-icons-outlined">error_outline</span>
-          {error}
-        </div>
-      )}
-
-      <div className="remit-toolbar">
-        <div className="remit-toolbar-row">
-          <span className="remit-toolbar-label"><span className="material-icons-outlined">event</span>Period</span>
-          <div className="remit-date-tabs">
-            {['today', 'yesterday', 'all'].map((val) => (
-              <button key={val} type="button" className={`filter-tab${dateFilter === val ? ' active' : ''}`} onClick={() => setDateFilter(val)}>
-                {val === 'today' ? 'Today' : val === 'yesterday' ? 'Yesterday' : 'All'}
+        {filtered.length > 0 && (
+          <div className="remit-paginator">
+            <span className="remit-paginator-info">Showing {rangeStart}–{rangeEnd} of {filtered.length} results</span>
+            <div className="remit-paginator-controls">
+              <select className="remit-page-size-select" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
+                <option value={10}>10 / page</option>
+                <option value={25}>25 / page</option>
+                <option value={50}>50 / page</option>
+              </select>
+              <button type="button" className="remit-page-btn" disabled={currentPage <= 1} onClick={() => setPage((p) => p - 1)}>
+                <span className="material-icons-outlined">chevron_left</span>
               </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {loading && <div style={{ padding: '60px 0', textAlign: 'center' }}><div className="spinner" /></div>}
-      {!loading && groups.length === 0 && (
-        <div className="card" style={{ padding: 40, textAlign: 'center', color: 'var(--muted-fg)' }}>No activity for this period.</div>
-      )}
-
-      <div className="remit-person-grid">
-        {!loading && groups.map((g) => (
-          <div className="remit-person-card" key={g.name}>
-            <div className="remit-person-head">
-              <span className="remit-person-avatar">{g.name.charAt(0).toUpperCase()}</span>
-              <span className="remit-person-name">{g.name}</span>
-            </div>
-            <div className="remit-person-stats">
-              <div className="remit-person-stat">
-                <span className="remit-person-stat-label">Delivered</span>
-                <span className="remit-person-stat-val">{g.delivered} orders</span>
-              </div>
-              <div className="remit-person-stat">
-                <span className="remit-person-stat-label">Remitted</span>
-                <span className="remit-person-stat-val remit-person-stat-success">{formatPeso(g.remitted)}</span>
-              </div>
-              <div className="remit-person-stat">
-                <span className="remit-person-stat-label">Outstanding</span>
-                <span className={`remit-person-stat-val ${g.outstanding > 0 ? 'remit-person-stat-danger' : ''}`}>{formatPeso(g.outstanding)}</span>
-              </div>
+              <input
+                type="number"
+                className="remit-page-input"
+                value={currentPage}
+                min={1}
+                max={totalPages}
+                onChange={handlePageInput}
+              />
+              <span className="remit-paginator-of">of {totalPages}</span>
+              <button type="button" className="remit-page-btn" disabled={currentPage >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                <span className="material-icons-outlined">chevron_right</span>
+              </button>
             </div>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
 }
+
