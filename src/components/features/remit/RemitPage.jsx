@@ -94,20 +94,105 @@ function RemitWorklist() {
 
   const totalOutstanding = useMemo(() => filtered.reduce((s, r) => s + r.balance, 0), [filtered]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  // Group into delivery batches: same Point Person + same delivered date/time.
+  // Batches where every order is already fully Paid are dropped entirely —
+  // History tab is the record of what's already settled.
+  const batches = useMemo(() => {
+    const groups = {};
+    filtered.forEach((r) => {
+      const pp = r.pointPerson || 'No Point Person';
+      const key = `${pp}|||${r.deliveredDate}|||${r.deliveredTime}`;
+      if (!groups[key]) {
+        groups[key] = { pointPerson: pp, deliveredDate: r.deliveredDate, deliveredDateDisplay: r.deliveredDateDisplay, deliveredTime: r.deliveredTime, orders: [] };
+      }
+      groups[key].orders.push(r);
+    });
+
+    const settled = Object.values(groups).filter((g) => g.orders.some((o) => o.paymentStatus !== 'Paid'));
+
+    // Number batches sequentially per point person, earliest first, based
+    // on whatever is currently visible after filters are applied.
+    const byPerson = {};
+    settled.forEach((g) => {
+      if (!byPerson[g.pointPerson]) byPerson[g.pointPerson] = [];
+      byPerson[g.pointPerson].push(g);
+    });
+
+    const numbered = [];
+    Object.values(byPerson).forEach((list) => {
+      list.sort((a, b) => `${a.deliveredDate}${a.deliveredTime}`.localeCompare(`${b.deliveredDate}${b.deliveredTime}`));
+      list.forEach((g, idx) => {
+        const balance = g.orders.reduce((s, o) => s + o.balance, 0);
+        numbered.push({ ...g, batchNumber: idx + 1, balance, key: `${g.pointPerson}|||${g.deliveredDate}|||${g.deliveredTime}` });
+      });
+    });
+
+    numbered.sort((a, b) => `${b.deliveredDate}${b.deliveredTime}`.localeCompare(`${a.deliveredDate}${a.deliveredTime}`));
+    return numbered;
+  }, [filtered]);
+
+  const totalPages = Math.max(1, Math.ceil(batches.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageData = useMemo(
-    () => filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize),
-    [filtered, currentPage, pageSize]
+    () => batches.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [batches, currentPage, pageSize]
   );
-  const rangeStart = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const rangeEnd = Math.min(currentPage * pageSize, filtered.length);
+  const rangeStart = batches.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(currentPage * pageSize, batches.length);
+
+  const [expandedBatches, setExpandedBatches] = useState({});
+  function toggleBatch(key) { setExpandedBatches((prev) => ({ ...prev, [key]: !prev[key] })); }
 
   useEffect(() => { setPage(1); }, [search, statusFilter, ppFilter, dateFilter, sortCol, sortDir, pageSize]);
 
   function handlePageInput(e) {
     const val = parseInt(e.target.value, 10);
     if (!Number.isNaN(val) && val >= 1 && val <= totalPages) setPage(val);
+  }
+
+  // Remit All modal state
+  const [remitAllTarget, setRemitAllTarget] = useState(null);
+  const [remitAllChecked, setRemitAllChecked] = useState({});
+  const [remitAllMethod, setRemitAllMethod] = useState('Cash');
+  const [remitAllSubmitting, setRemitAllSubmitting] = useState(false);
+
+  function openRemitAll(batch) {
+    const unpaid = batch.orders.filter((o) => o.paymentStatus !== 'Paid');
+    const checked = {};
+    unpaid.forEach((o) => { checked[o.orderId] = true; });
+    setRemitAllTarget({ ...batch, unpaid });
+    setRemitAllChecked(checked);
+    setRemitAllMethod('Cash');
+  }
+  function closeRemitAll() { setRemitAllTarget(null); }
+
+  const remitAllTotal = useMemo(() => {
+    if (!remitAllTarget) return 0;
+    return remitAllTarget.unpaid.reduce((s, o) => (remitAllChecked[o.orderId] ? s + o.balance : s), 0);
+  }, [remitAllTarget, remitAllChecked]);
+
+  async function confirmRemitAll() {
+    if (!remitAllTarget) return;
+    const toRemit = remitAllTarget.unpaid.filter((o) => remitAllChecked[o.orderId]);
+    if (!toRemit.length) {
+      showToast('Please select at least one order.', { type: 'error' });
+      return;
+    }
+    setRemitAllSubmitting(true);
+    try {
+      let hasError = false;
+      for (const o of toRemit) {
+        const result = await remitOrderPayment(o.orderId, o.balance, remitAllMethod);
+        if (result?.success === false) hasError = true;
+      }
+      showToast(hasError ? 'Some orders failed to remit.' : `${toRemit.length} order(s) remitted!`, { type: hasError ? 'error' : 'success' });
+      closeRemitAll();
+      await load();
+    } catch (err) {
+      showToast(err?.message || 'Failed to remit batch.', { type: 'error' });
+    } finally {
+      setRemitAllSubmitting(false);
+    }
   }
 
   const summaryLabel = dateFilter === 'today' ? 'Today' : dateFilter === 'yesterday' ? 'Yesterday' : 'All Time';
@@ -234,64 +319,86 @@ function RemitWorklist() {
         </div>
       </div>
 
-      <div className="card remit-card">
-        <div className="card-body remit-table-wrap">
-          <table className="data-table" style={{ minWidth: 1000 }}>
-            <thead>
-              <tr>
-                <SortHeader col="orderId">Order ID</SortHeader>
-                <SortHeader col="deliveredDate">Date Delivered</SortHeader>
-                <SortHeader col="customerName">Customer</SortHeader>
-                <SortHeader col="pointPerson">Point Person</SortHeader>
-                <th>Product</th>
-                <th>Qty</th>
-                <th>Total</th>
-                <SortHeader col="balance">Balance</SortHeader>
-                <th>Delivery</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40 }}>Loading...</td></tr>
+      <div className="remit-batch-list">
+        {loading && <div style={{ padding: 40, textAlign: 'center' }}>Loading...</div>}
+        {!loading && batches.length === 0 && (
+          <div className="card" style={{ padding: 40, textAlign: 'center', color: 'var(--muted-fg)' }}>No outstanding deliveries found.</div>
+        )}
+        {!loading && pageData.map((batch) => {
+          const isOpen = !!expandedBatches[batch.key];
+          return (
+            <div className="remit-batch-card" key={batch.key}>
+              <button type="button" className="remit-batch-head" onClick={() => toggleBatch(batch.key)}>
+                <span className="material-icons-outlined remit-batch-chevron">{isOpen ? 'expand_less' : 'expand_more'}</span>
+                <span className="remit-batch-avatar">{batch.pointPerson.charAt(0).toUpperCase()}</span>
+                <div className="remit-batch-identity">
+                  <div className="remit-batch-name">{batch.pointPerson} <span className="remit-batch-tag">Delivery #{batch.batchNumber}</span></div>
+                  <div className="remit-batch-sub">{batch.deliveredDateDisplay || '--'} · {batch.deliveredTime || '--'} · {batch.orders.length} order{batch.orders.length !== 1 ? 's' : ''}</div>
+                </div>
+                <div className="remit-batch-balance">
+                  <span className="remit-batch-balance-label">Outstanding</span>
+                  <span className="remit-batch-balance-val">{formatPeso(batch.balance)}</span>
+                </div>
+                <span
+                  className="remit-btn remit-btn-all"
+                  onClick={(e) => { e.stopPropagation(); openRemitAll(batch); }}
+                >
+                  <span className="material-icons-outlined">move_to_inbox</span> Remit All
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="remit-batch-body">
+                  <table className="data-table" style={{ minWidth: 800 }}>
+                    <thead>
+                      <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Product</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                        <th>Balance</th>
+                        <th>Delivery</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {batch.orders.map((r) => (
+                        <tr key={r.orderId}>
+                          <td data-label="Order ID" style={{ fontSize: 12, color: 'var(--muted-fg)' }}>{r.orderId}</td>
+                          <td data-label="Customer" style={{ fontWeight: 700 }}>{r.customerName}{r.location ? ` — ${r.location}` : ''}</td>
+                          <td data-label="Product">{r.product}{r.slimPoly ? ` (${r.slimPoly})` : ''}</td>
+                          <td data-label="Qty">{r.qty}</td>
+                          <td data-label="Total">{formatPeso(r.total)}</td>
+                          <td data-label="Balance" style={{ fontWeight: 700 }}>{r.balance > 0 ? formatPeso(r.balance) : '--'}</td>
+                          <td data-label="Delivery">
+                            <span className={`badge ${r.deliveryStatus === 'Delivered' ? 'badge-success' : 'badge-warning'}`}>{r.deliveryStatus}</span>
+                          </td>
+                          <td data-label="Status">
+                            <span className={`badge ${r.paymentStatus === 'Paid' ? 'badge-success' : r.paymentStatus === 'Partial' ? 'badge-warning' : 'badge-danger'}`}>{r.paymentStatus}</span>
+                          </td>
+                          <td data-label="Action">
+                            {r.paymentStatus === 'Paid' ? (
+                              <span style={{ color: 'var(--muted-fg)', fontSize: 12 }}>--</span>
+                            ) : (
+                              <button type="button" className="remit-btn" onClick={() => openPay(r)}>
+                                <span className="material-icons-outlined">move_to_inbox</span> Remit
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-              {!loading && filtered.length === 0 && (
-                <tr><td colSpan={11} style={{ textAlign: 'center', padding: 40, color: 'var(--muted-fg)' }}>No delivered orders found.</td></tr>
-              )}
-              {!loading && pageData.map((r) => (
-                <tr key={r.orderId}>
-                  <td data-label="Order ID" style={{ fontSize: 12, color: 'var(--muted-fg)' }}>{r.orderId}</td>
-                  <td data-label="Date Delivered"><div>{r.deliveredDateDisplay || '--'}</div><div style={{ fontSize: 11, color: 'var(--muted-fg)' }}>{r.deliveredTime}</div></td>
-                  <td data-label="Customer" style={{ fontWeight: 700 }}>{r.customerName}{r.location ? ` — ${r.location}` : ''}</td>
-                  <td data-label="Point Person">{r.pointPerson || '--'}</td>
-                  <td data-label="Product">{r.product}{r.slimPoly ? ` (${r.slimPoly})` : ''}</td>
-                  <td data-label="Qty">{r.qty}</td>
-                  <td data-label="Total">{formatPeso(r.total)}</td>
-                  <td data-label="Balance" style={{ fontWeight: 700 }}>{r.balance > 0 ? formatPeso(r.balance) : '--'}</td>
-                  <td data-label="Delivery">
-                    <span className={`badge ${r.deliveryStatus === 'Delivered' ? 'badge-success' : 'badge-warning'}`}>{r.deliveryStatus}</span>
-                  </td>
-                  <td data-label="Status">
-                    <span className={`badge ${r.paymentStatus === 'Paid' ? 'badge-success' : r.paymentStatus === 'Partial' ? 'badge-warning' : 'badge-danger'}`}>{r.paymentStatus}</span>
-                  </td>
-                  <td data-label="Action">
-                    {r.paymentStatus === 'Paid' ? (
-                      <span style={{ color: 'var(--muted-fg)', fontSize: 12 }}>--</span>
-                    ) : (
-                      <button type="button" className="remit-btn" onClick={() => openPay(r)}>
-                        <span className="material-icons-outlined">move_to_inbox</span> Remit
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length > 0 && (
+            </div>
+          );
+        })}
+        {batches.length > 0 && (
           <div className="remit-paginator">
-            <span className="remit-paginator-info">Showing {rangeStart}–{rangeEnd} of {filtered.length} results</span>
+            <span className="remit-paginator-info">Showing {rangeStart}–{rangeEnd} of {batches.length} batches</span>
             <div className="remit-paginator-controls">
               <select className="remit-page-size-select" value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))}>
                 <option value={10}>10 / page</option>
@@ -316,6 +423,52 @@ function RemitWorklist() {
             </div>
           </div>
         )}
+      </div>
+
+      <div className={`pay-modal-overlay${remitAllTarget ? ' show' : ''}`}>
+        <div className="pay-modal" style={{ maxWidth: 460 }}>
+          <div className="pay-modal-header">
+            <div className="pay-modal-title">Remit All — {remitAllTarget?.pointPerson} (Delivery #{remitAllTarget?.batchNumber})</div>
+            <button type="button" className="pdp-close-btn" onClick={closeRemitAll}><span className="material-icons-outlined">close</span></button>
+          </div>
+          {remitAllTarget && (
+            <div className="pay-modal-body">
+              <div className="remit-all-list">
+                {remitAllTarget.unpaid.map((o) => (
+                  <label key={o.orderId} className="remit-all-item">
+                    <input
+                      type="checkbox"
+                      checked={!!remitAllChecked[o.orderId]}
+                      onChange={(e) => setRemitAllChecked((prev) => ({ ...prev, [o.orderId]: e.target.checked }))}
+                    />
+                    <div className="remit-all-item-info">
+                      <div className="remit-all-item-name">{o.customerName}</div>
+                      <div className="remit-all-item-sub">{o.orderId} · {o.product}{o.slimPoly ? ` (${o.slimPoly})` : ''}</div>
+                    </div>
+                    <div className="remit-all-item-amt">{formatPeso(o.balance)}</div>
+                  </label>
+                ))}
+              </div>
+              <div className="pdp-pay-method-row" style={{ marginTop: 14 }}>
+                <label className="pdp-pay-method-option">
+                  <input type="radio" name="remitAllMethod" value="Cash" checked={remitAllMethod === 'Cash'} onChange={() => setRemitAllMethod('Cash')} />
+                  <span className="material-icons-outlined">payments</span> Cash
+                </label>
+                <label className="pdp-pay-method-option">
+                  <input type="radio" name="remitAllMethod" value="GCash" checked={remitAllMethod === 'GCash'} onChange={() => setRemitAllMethod('GCash')} />
+                  <span className="material-icons-outlined">smartphone</span> GCash
+                </label>
+              </div>
+              <div className="remit-all-total">
+                <span>Total to Remit</span>
+                <span className="remit-all-total-val">{formatPeso(remitAllTotal)}</span>
+              </div>
+              <button type="button" className="btn-primary" disabled={remitAllSubmitting || remitAllTotal <= 0} onClick={confirmRemitAll}>
+                {remitAllSubmitting ? 'Processing...' : 'Confirm Remit All'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className={`pay-modal-overlay${payTarget ? ' show' : ''}`}>
