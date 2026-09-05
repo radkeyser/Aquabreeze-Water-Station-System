@@ -6,6 +6,7 @@ import './remit.css';
 
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 function yesterdayISO() { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); }
+function dayBeforeYesterdayISO() { const d = new Date(); d.setDate(d.getDate() - 2); return d.toISOString().slice(0, 10); }
 
 export default function RemitPage() {
   const [tab, setTab] = useState('remit');
@@ -69,6 +70,10 @@ function RemitWorklist() {
     const q = search.trim().toLowerCase();
     const today = todayISO();
     const yesterday = yesterdayISO();
+    const dayBefore = dayBeforeYesterdayISO();
+    // "All" here is scoped to the last 3 days only (Today, Yesterday, the
+    // day before) — not unlimited history. History tab covers everything.
+    const last3Days = [today, yesterday, dayBefore];
 
     let list = rows.filter((r) => {
       const matchQ = !q || r.customerName.toLowerCase().includes(q) || r.orderId.toLowerCase().includes(q) || r.pointPerson.toLowerCase().includes(q);
@@ -76,7 +81,9 @@ function RemitWorklist() {
         ? r.paymentStatus.toLowerCase() !== 'paid'
         : r.paymentStatus.toLowerCase() === statusFilter;
       const matchPP = !ppFilter || r.pointPerson.toLowerCase() === ppFilter.toLowerCase();
-      const matchDate = dateFilter === 'all' || (dateFilter === 'today' ? r.deliveredDate === today : r.deliveredDate === yesterday);
+      const matchDate = dateFilter === 'all'
+        ? last3Days.includes(r.deliveredDate)
+        : (dateFilter === 'today' ? r.deliveredDate === today : r.deliveredDate === yesterday);
       return matchQ && matchStatus && matchPP && matchDate;
     });
 
@@ -200,8 +207,10 @@ function RemitWorklist() {
   const todaysSummary = useMemo(() => {
     const today = todayISO();
     const yesterday = yesterdayISO();
+    const dayBefore = dayBeforeYesterdayISO();
+    const last3Days = [today, yesterday, dayBefore];
     const scopedRows = dateFilter === 'all'
-      ? rows
+      ? rows.filter((r) => last3Days.includes(r.deliveredDate))
       : rows.filter((r) => r.deliveredDate === (dateFilter === 'today' ? today : yesterday));
     const fullyRemitted = scopedRows.filter((r) => r.paymentStatus === 'Paid').length;
     return { total: scopedRows.length, fullyRemitted, outstanding: scopedRows.length - fullyRemitted };
