@@ -2,6 +2,7 @@
 import DataTable from '../../../scripts/DataTable.jsx';
 import SearchInput from '../../../scripts/Searchinput.jsx';
 import { getReportsData } from '../../../api/reports';
+import { inExportRange, downloadCSV, downloadXLSX } from '../../../utils/exportReports.js';
 import './reports.css';
 
 const TABS = [
@@ -196,6 +197,21 @@ function rowMatchesSearch(row, query) {
     .join(' ')
     .toLowerCase();
   return text.includes(query.toLowerCase());
+}
+
+// Reuses each tab's already-defined `columns` (label + key) to produce a
+// plain, JSX-free value per cell for file export.
+function getExportCellValue(row, col, activeTab) {
+  if (col.key === 'time') return formatTime(row.time);
+  if (activeTab === 'cashdrawer' && !['shiftId', 'date', 'time', 'status'].includes(col.key)) {
+    const value = row.dayReport?.[col.key];
+    if (value === undefined || value === null || value === '') return '';
+    if (typeof value === 'number') return value;
+    if (!Number.isNaN(Number(value)) && value !== '') return Number(value);
+    return String(value);
+  }
+  const raw = row[col.key];
+  return raw === undefined || raw === null ? '' : raw;
 }
 
 export default function ReportsPage() {
@@ -427,8 +443,46 @@ export default function ReportsPage() {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportFilename, setExportFilename] = useState('');
   const [exportPreset, setExportPreset] = useState('month');
+  const [exportFormat, setExportFormat] = useState('csv');
+  const [exportCustomFrom, setExportCustomFrom] = useState('');
+  const [exportCustomTo, setExportCustomTo] = useState('');
+  const [exporting, setExporting] = useState(false);
+  const [exportStatusMsg, setExportStatusMsg] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const activeTabLabel = TABS.find((t) => t.key === activeTab)?.label || 'Report';
+
+  async function handleExport() {
+    setExportStatusMsg('');
+    const rows = (normalized[activeTab] || []).filter((row) => (
+      activeTab === 'cashdrawer' ? true : inExportRange(row.date, exportPreset, exportCustomFrom, exportCustomTo)
+    ));
+
+    if (!rows.length) {
+      setExportStatusMsg('No data found for the selected date range.');
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const headers = columns.map((c) => c.label);
+      const dataRows = rows.map((row) => columns.map((c) => getExportCellValue(row, c, activeTab)));
+      const baseName = exportFilename.trim() || `AquaBreeze_${activeTabLabel.replace(/\s+/g, '')}_${exportPreset}`;
+
+      if (exportFormat === 'xlsx') {
+        await downloadXLSX(baseName, headers, dataRows, activeTabLabel);
+      } else {
+        downloadCSV(baseName, headers, dataRows);
+      }
+      setExportModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      setExportStatusMsg('Export failed. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   useEffect(() => {
     setCurrentPage(1);
@@ -489,11 +543,11 @@ export default function ReportsPage() {
           type="button"
           className="btn-export-report"
           id="exportReportBtn"
-          onClick={() => setExportModalOpen(true)}
+          onClick={() => { setExportStatusMsg(''); setExportModalOpen(true); }}
         >
-          <span className="material-icons-outlined">table_chart</span>
-          Export to Sheets
-        </button>
+          <span className="material-icons-outlined">file_download</span>
+          Export
+        </button> 
       </div>
 
       <div className="reports-global-filter" style={{ position: 'relative', zIndex: 60, overflow: 'visible' }}>
@@ -547,8 +601,8 @@ export default function ReportsPage() {
           <div className="pay-modal">
             <div className="pay-modal-header">
               <div className="pay-modal-title">
-                <span className="material-icons-outlined">table_chart</span>
-                Export to Google Sheets
+                <span className="material-icons-outlined">file_download</span>
+                Export {activeTabLabel}
               </div>
               <button className="pdp-close-btn" id="exportModalClose" onClick={() => setExportModalOpen(false)}>
                 <span className="material-icons-outlined">close</span>
@@ -557,8 +611,7 @@ export default function ReportsPage() {
             <div className="pay-modal-body">
               <div className="pay-modal-info">
                 <div>
-                  Exports: <strong>Sales, Pautang, CashDrawer, Shift</strong> filtered by date.
-                  <br />Always full export: <strong>Customers, Payroll, DayReport, Products, Staff, Config</strong>.
+                  Exports the currently viewed <strong>{activeTabLabel}</strong> data, filtered by the date range below.
                 </div>
               </div>
 
@@ -597,24 +650,61 @@ export default function ReportsPage() {
                 <div id="exportCustomDates" className="filter-custom-dates">
                   <div className="filter-date-group">
                     <label className="filter-date-label">From</label>
-                    <input type="date" className="filter-date-input" id="exportDateFrom" />
+                    <input
+                      type="date"
+                      className="filter-date-input"
+                      id="exportDateFrom"
+                      value={exportCustomFrom}
+                      onChange={(event) => setExportCustomFrom(event.target.value)}
+                    />
                   </div>
                   <span className="filter-date-sep" />
                   <div className="filter-date-group">
                     <label className="filter-date-label">To</label>
-                    <input type="date" className="filter-date-input" id="exportDateTo" />
+                    <input
+                      type="date"
+                      className="filter-date-input"
+                      id="exportDateTo"
+                      value={exportCustomTo}
+                      onChange={(event) => setExportCustomTo(event.target.value)}
+                    />
                   </div>
                 </div>
               )}
 
-              <div id="exportStatus" style={{ display: 'none' }} className="pdp-status-pill status-utang">
-                <span className="material-icons-outlined">hourglass_empty</span>
-                <span id="exportStatusText">Preparing export...</span>
+              <div className="pdp-field">
+                <label className="pdp-label">File Format</label>
+                <div className="export-date-presets">
+                  <button
+                    type="button"
+                    className={`export-preset ${exportFormat === 'csv' ? 'active' : ''}`}
+                    onClick={() => setExportFormat('csv')}
+                  >
+                    CSV
+                  </button>
+                  <button
+                    type="button"
+                    className={`export-preset ${exportFormat === 'xlsx' ? 'active' : ''}`}
+                    onClick={() => setExportFormat('xlsx')}
+                  >
+                    Excel (.xlsx)
+                  </button>
+                </div>
+                <div className="pdp-help-text">
+                  Both formats open directly in Google Sheets via File → Import.
+                </div>
               </div>
 
-              <button className="btn-primary" id="exportConfirmBtn" type="button">
-                <span className="material-icons-outlined">open_in_new</span>
-                Create Spreadsheet
+              {exportStatusMsg && (
+                <div className="pdp-status-pill status-utang" style={{ display: 'flex' }}>
+                  <span className="material-icons-outlined">error_outline</span>
+                  <span>{exportStatusMsg}</span>
+                </div>
+              )}
+
+              <button className="btn-primary" id="exportConfirmBtn" type="button" disabled={exporting} onClick={handleExport}>
+                <span className="material-icons-outlined">{exporting ? 'hourglass_empty' : 'download'}</span>
+                {exporting ? 'Exporting...' : `Export as ${exportFormat === 'xlsx' ? 'Excel' : 'CSV'}`}
               </button>
             </div>
           </div>
