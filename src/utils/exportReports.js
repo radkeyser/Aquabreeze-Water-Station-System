@@ -58,9 +58,24 @@ export function downloadCSV(filename, headers, rows) {
 }
 
 export async function downloadXLSX(filename, headers, rows, sheetName = 'Report') {
-  const XLSX = await import('xlsx');
-  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, String(sheetName).slice(0, 31) || 'Report');
-  XLSX.writeFile(workbook, `${sanitizeFilename(filename)}.xlsx`);
+  const ExcelJS = await import('exceljs');
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet(String(sheetName).slice(0, 31) || 'Report');
+
+  worksheet.addRow(headers);
+  worksheet.getRow(1).font = { bold: true };
+  rows.forEach((row) => worksheet.addRow(row));
+
+  worksheet.columns.forEach((col) => {
+    let maxLen = 10;
+    col.eachCell?.({ includeEmpty: true }, (cell) => {
+      const len = String(cell.value ?? '').length;
+      if (len > maxLen) maxLen = len;
+    });
+    col.width = Math.min(maxLen + 2, 40);
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  triggerDownload(blob, `${sanitizeFilename(filename)}.xlsx`);
 }
