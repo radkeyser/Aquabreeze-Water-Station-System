@@ -273,10 +273,17 @@ export async function getVarianceReport(timeframe, customFrom, customTo) {
 }
 
 // ---- History ----
+function nextMonthStr(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const nextY = m === 12 ? y + 1 : y;
+  const nextM = m === 12 ? 1 : m + 1;
+  return `${nextY}-${String(nextM).padStart(2, '0')}`;
+}
+
 export async function getInventoryHistory(year, month) {
   const monthStr = `${year}-${String(month).padStart(2, '0')}`;
   const [{ data: invData, error: invErr }, { data: delData }, { data: borrowData }] = await Promise.all([
-    supabase.from('daily_inventory').select('*').gte('date', `${monthStr}-01`).lte('date', `${monthStr}-31`),
+    supabase.from('daily_inventory').select('*').gte('date', `${monthStr}-01`).lt('date', `${nextMonthStr(monthStr)}-01`),
     supabase.from('delivery').select('date,status'),
     supabase.from('borrowed').select('date,gallon,borrow_status,record_status'),
   ]);

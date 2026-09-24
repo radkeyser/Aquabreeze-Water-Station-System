@@ -152,9 +152,16 @@ export async function verifyShiftCash({ shiftId, verifiedCount, remarks }) {
   return data;
 }
 
+function nextMonthStr(month) {
+  const [y, m] = month.split('-').map(Number);
+  const nextY = m === 12 ? y + 1 : y;
+  const nextM = m === 12 ? 1 : m + 1;
+  return `${nextY}-${String(nextM).padStart(2, '0')}`;
+}
+
 export async function getBankReconciliationData(month, selectedBank) {
   const [{ data: txData, error: txErr }, { data: reconData, error: reconErr }, { data: accData, error: accErr }] = await Promise.all([
-    supabase.from('cash_transactions').select('*').gte('date', `${month}-01`).lte('date', `${month}-31`),
+    supabase.from('cash_transactions').select('*').gte('date', `${month}-01`).lt('date', `${nextMonthStr(month)}-01`),
     supabase.from('bank_reconciliation').select('*').eq('month', month).eq('selected_bank', selectedBank || ''),
     supabase.from('cash_accounts').select('*'),
   ]);
