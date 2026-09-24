@@ -597,7 +597,7 @@ export default function ReportsPage() {
       </div>
 
       {exportModalOpen && (
-        <div className="pay-modal-overlay" id="exportModalOverlay">
+        <div className="pay-modal-overlay show" id="exportModalOverlay">
           <div className="pay-modal">
             <div className="pay-modal-header">
               <div className="pay-modal-title">
